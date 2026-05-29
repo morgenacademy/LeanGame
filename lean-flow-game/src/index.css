@@ -315,6 +315,9 @@ kbd {
   align-items: stretch;
   gap: 0.3rem;
   overflow-x: auto;
+  overflow-y: visible;
+  /* ruimte bovenaan voor de markt-vraagballon (anders klipt overflow-x 'm) */
+  padding-top: 104px;
   padding-bottom: 0.6rem;
 }
 .station {
@@ -1003,6 +1006,57 @@ kbd {
   font-size: 0.66rem;
   color: var(--text-muted);
   font-style: italic;
+}
+
+/* Markt-vraagballon: hier zegt de klant wat hij wil */
+.market {
+  position: relative;
+}
+.demand-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.7rem 0.9rem;
+  min-width: 116px;
+  background: var(--card-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+.demand-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: var(--card-border);
+}
+.demand-bubble.known {
+  border-color: rgba(216, 254, 86, 0.5);
+}
+.demand-bubble .house {
+  transform: scale(1.5);
+  margin: 0.25rem 0;
+}
+.bubble-label {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+.bubble-q {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  line-height: 1;
 }
 
 /* Startscherm: kader + powered-by eronder */

@@ -74,6 +74,19 @@ function Market() {
   const shown = houses.slice(-12);
   return (
     <div className="station market">
+      <div className={`demand-bubble ${g.demandRevealed ? 'known' : 'unknown'}`}>
+        {g.demandRevealed && g.demandColor ? (
+          <>
+            <span className="bubble-label">dit wil ik:</span>
+            <House color={g.demandColor} sold revealed={false} />
+          </>
+        ) : (
+          <>
+            <span className="bubble-q">?</span>
+            <span className="bubble-label">zeg ik aan ’t eind</span>
+          </>
+        )}
+      </div>
       <div className="station-queue market-houses">
         {houses.length === 0 && <span className="pile-empty">nog niets geleverd</span>}
         {shown.map((h) => (

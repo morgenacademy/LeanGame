@@ -10,7 +10,16 @@ interface Step {
 const q = (s: string) => document.querySelector(s);
 const qa = (s: string) => document.querySelectorAll(s);
 
-const STEPS: Step[] = [
+// Korte oriëntatie voor latere rondes (board staat al uitgelegd in ronde 1).
+const LATER_STEPS: Step[] = [
+  {
+    target: () => q('.demand-bubble') ?? q('.market'),
+    title: 'Nieuwe ronde — kijk even rond',
+    text: 'De klant zegt nu vooraf wat hij wil: zie de vraag bij de markt. Maak alléén dat. Soms sta je even stil — dat mag. Klaar?',
+  },
+];
+
+const ROUND1_STEPS: Step[] = [
   {
     target: () => q('.line'),
     title: 'De fabriek',
@@ -45,6 +54,8 @@ const STEPS: Step[] = [
 
 export function Tour() {
   const startClock = useGame((s) => s.startClock);
+  const round = useGame((s) => s.g.roundIndex);
+  const STEPS = round === 0 ? ROUND1_STEPS : LATER_STEPS;
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const step = STEPS[i];
@@ -81,7 +92,7 @@ export function Tour() {
       )}
       <div className="tour-card" style={{ top: tipTop, left: tipLeft }}>
         <div className="tour-step">
-          Rondleiding · {i + 1} / {STEPS.length}
+          {STEPS.length > 1 ? `Rondleiding · ${i + 1} / ${STEPS.length}` : 'Even oriënteren'}
         </div>
         <h3 className="tour-title">{step.title}</h3>
         <p className="tour-text">{step.text}</p>

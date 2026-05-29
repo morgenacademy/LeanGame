@@ -62,15 +62,15 @@ export const useGame = create<Store>((set, get) => {
     },
 
     enterFloor() {
-      const round = get().g.roundIndex;
+      // Elke ronde: board zichtbaar maar gepauzeerd, zodat de speler eerst kan
+      // oriënteren ('waar kijk ik naar?') en daarna zelf op Start drukt.
       set((state) => {
         const g = clone(state.g);
         g.phase = 'playing';
         g.running = false;
-        if (round === 0) seedHolding(g); // bouw-UI alvast zichtbaar tijdens walkthrough
-        return { g, tourActive: round === 0 };
+        seedHolding(g); // bouw-UI alvast zichtbaar
+        return { g, tourActive: true };
       });
-      if (round !== 0) get().startClock();
     },
 
     startClock() {

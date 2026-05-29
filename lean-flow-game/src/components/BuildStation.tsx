@@ -51,8 +51,6 @@ export function BuildStation() {
     };
   }, [drag, place]);
 
-  const demand = g.demandRevealed && g.demandColor ? g.demandColor : null;
-
   return (
     <div className="station player-station">
       <div className="station-queue">
@@ -64,20 +62,6 @@ export function BuildStation() {
         <div className="build-head">
           <div className="station-short">
             Bouw <span className="you-badge">JIJ</span>
-          </div>
-          <div className="demand-chip">
-            Klant wil:&nbsp;
-            {demand ? (
-              <>
-                <span className="swatch" style={{ background: COLOR_HEX[demand] }} />
-                {COLOR_LABEL[demand]}
-              </>
-            ) : (
-              <>
-                <strong>?</strong>
-                <span className="hint-mini">&nbsp;nog onbekend</span>
-              </>
-            )}
           </div>
         </div>
 
