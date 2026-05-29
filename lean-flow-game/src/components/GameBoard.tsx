@@ -2,6 +2,7 @@ import { useGame } from '../game/store';
 import { Hud } from './Hud';
 import { Station } from './Station';
 import { BuildStation } from './BuildStation';
+import { Narrator } from './Narrator';
 import { RAW_SUPPLY } from '../game/config';
 import { COLOR_HEX } from '../game/colors';
 import type { Color } from '../game/types';
@@ -43,6 +44,8 @@ export function GameBoard() {
         <Arrow />
         <Market />
       </div>
+
+      <Narrator />
     </div>
   );
 }

@@ -3,3 +3,6 @@
 node_modules/
 dist/
 *.local
+
+# Lokale clone van de repo binnen de repo-map
+/LeanGame/
