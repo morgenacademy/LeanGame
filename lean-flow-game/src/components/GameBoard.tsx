@@ -80,7 +80,9 @@ function Market() {
       </div>
       <div className="station-body">
         <div className="station-short">Markt</div>
-        <div className="station-name">De klant</div>
+        <div className="station-name">
+          De klant <span className="market-sub">buiten de fabriek</span>
+        </div>
         <div className="station-status market-score">
           {g.demandRevealed ? `${g.metrics.housesSold}/${g.metrics.housesBuilt} verkocht` : 'vraag onbekend'}
         </div>

@@ -4,7 +4,8 @@ export function StartScreen() {
   const startGame = useGame((s) => s.startGame);
   return (
     <div className="screen center">
-      <div className="hero card-glass">
+      <div className="start-wrap">
+        <div className="hero card-glass">
         <div className="eyebrow">Lean simulatie · Morgen</div>
         <h1 className="display">
           FLOW<span className="accent">.</span>
@@ -21,6 +22,16 @@ export function StartScreen() {
           Start de simulatie →
         </button>
         <div className="footnote">≈ 5 minuten · solo · multiplayer volgt later</div>
+      </div>
+
+        <a
+          className="powered-by"
+          href="https://morgencompany.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          powered by <strong>Morgen Academy</strong>
+        </a>
       </div>
     </div>
   );

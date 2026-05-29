@@ -3,7 +3,7 @@ import { ROUNDS } from '../game/config';
 
 export function RoundIntro() {
   const g = useGame((s) => s.g);
-  const beginRound = useGame((s) => s.beginRound);
+  const enterFloor = useGame((s) => s.enterFloor);
   const cfg = ROUNDS[g.roundIndex];
 
   return (
@@ -19,8 +19,8 @@ export function RoundIntro() {
         <div className="controls-hint">
           Bedienen: <kbd>sleep</kbd> de juiste kleur uit de bak omhoog naar de bouwtekening.
         </div>
-        <button className="btn-primary" onClick={beginRound}>
-          Start {cfg.title.toLowerCase()} →
+        <button className="btn-primary" onClick={enterFloor}>
+          {g.roundIndex === 0 ? 'Loop de werkvloer op →' : `Start ${cfg.title.toLowerCase()} →`}
         </button>
       </div>
     </div>

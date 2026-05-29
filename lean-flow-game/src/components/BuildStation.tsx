@@ -50,7 +50,9 @@ export function BuildStation() {
 
       <div className="build-body">
         <div className="build-head">
-          <div className="station-short">Bouw</div>
+          <div className="station-short">
+            Bouw <span className="you-badge">JIJ</span>
+          </div>
           <div className="demand-chip">
             Klant wil:&nbsp;
             {demand ? (
@@ -59,7 +61,10 @@ export function BuildStation() {
                 {COLOR_LABEL[demand]}
               </>
             ) : (
-              <strong>?</strong>
+              <>
+                <strong>?</strong>
+                <span className="hint-mini">&nbsp;nog onbekend</span>
+              </>
             )}
           </div>
         </div>

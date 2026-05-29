@@ -166,6 +166,19 @@ export function placeBrick(s: GameState, color: Color): void {
   }
 }
 
+/**
+ * Legt vast één set in handen van de bouwer, zodat tijdens de walkthrough de
+ * echte bouw-UI (bouwtekening + bak) al zichtbaar is. Kosten worden gewoon geteld.
+ */
+export function seedHolding(s: GameState): void {
+  if (s.holding) return;
+  const cfg = ROUNDS[s.roundIndex];
+  const color = cfg.mode === 'pull' ? s.demandColor ?? rand(COLORS) : rand(COLORS);
+  s.holding = { id: s.nextUnitId++, color, startedAtMs: 0 };
+  s.placedBricks = 0;
+  s.metrics.bricksConsumed += BRICKS_PER_HOUSE;
+}
+
 function shipHouse(s: GameState): void {
   const u = s.holding!;
   const color = (u.color ?? COLORS[0]) as Color;

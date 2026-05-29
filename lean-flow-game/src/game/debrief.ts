@@ -27,8 +27,8 @@ export function buildDebrief(g: GameState): DebriefScript {
       steps: [
         {
           question: 'Je bouwde volop. Hoeveel huizen kocht de klant uiteindelijk?',
-          hint: 'De vraag-kleur werd pas aan het einde getrokken.',
-          options: ['Veel gebouwd, weinig verkocht', 'Ongeveer gelijk', 'Weinig gebouwd'],
+          hint: 'Je kon dit niet weten: pas aan het eind bleek wélke kleur de klant wilde. Dat is juist het punt van push.',
+          options: ['Veel gebouwd, weinig verkocht', 'Ongeveer gelijk', 'Weet ik niet'],
           reveal: `Je bouwde ${m.housesBuilt} huizen, de klant kocht er ${m.housesSold}. De andere ${m.housesUnsold} liggen onverkocht — gemaakt op voorraad, zonder te weten wat de klant wilde.`,
           principle: 'Overproductie — de hoofdverspilling',
         },

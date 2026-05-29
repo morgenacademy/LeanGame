@@ -872,6 +872,119 @@ kbd {
 }
 
 /* ============================================================
+   Walkthrough / rondleiding
+   ============================================================ */
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+.tour-spot {
+  position: fixed;
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(8, 5, 18, 0.82);
+  border: 2px solid var(--accent);
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+  pointer-events: none;
+}
+.tour-card {
+  position: fixed;
+  transform: translateX(-50%);
+  width: min(380px, calc(100vw - 32px));
+  background: var(--card-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+.tour-step {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+.tour-title {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 1.35rem;
+  color: var(--white);
+}
+.tour-text {
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 1.3rem;
+}
+.tour-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.tour-card .btn-primary {
+  padding: 0.7rem 1.4rem;
+  font-size: 0.9rem;
+}
+.tour-skip {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.tour-skip:hover {
+  color: var(--text-secondary);
+}
+
+/* Rol- en duidings-elementen */
+.you-badge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: var(--accent);
+  color: #1a1a2e;
+  padding: 0.1rem 0.4rem;
+  border-radius: 5px;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+.hint-mini {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+.market-sub {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Startscherm: kader + powered-by eronder */
+.start-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+}
+.powered-by {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.powered-by strong {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+.powered-by:hover {
+  color: var(--text-secondary);
+}
+.powered-by:hover strong {
+  color: var(--accent);
+}
+
+/* ============================================================
    Narrator (de coach)
    ============================================================ */
 .narrator {

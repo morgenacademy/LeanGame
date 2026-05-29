@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { makeRoundState, tick, placeBrick } from './engine';
+import { makeRoundState, tick, placeBrick, seedHolding } from './engine';
 import { ROUNDS, TICK_MS } from './config';
 import type { Color, GameState } from './types';
 
@@ -7,8 +7,13 @@ interface Store {
   g: GameState;
   /** true vóór de eerste start (toont het startscherm). */
   showIntro: boolean;
+  /** Walkthrough actief: board staat zichtbaar maar gepauzeerd. */
+  tourActive: boolean;
   startGame: () => void;
-  beginRound: () => void;
+  /** Loop de vloer op: board tonen, klok nog niet starten (ronde 1 → walkthrough). */
+  enterFloor: () => void;
+  /** Start de klok daadwerkelijk (na de walkthrough, of meteen vanaf ronde 2). */
+  startClock: () => void;
   place: (color: Color) => void;
   proceed: () => void;
   restart: () => void;
@@ -30,9 +35,6 @@ export const useGame = create<Store>((set, get) => {
 
   function startTimer() {
     stopTimer();
-    // Wall-clock dt: de simulatie loopt op echte verstreken tijd, niet op een vast
-    // interval. Zo blijft de speeltijd kloppen ook als de browser het interval throttlet
-    // (bv. een achtergrond-tab) of frames laat vallen.
     let last = performance.now();
     timer = setInterval(() => {
       const now = performance.now();
@@ -50,20 +52,32 @@ export const useGame = create<Store>((set, get) => {
   return {
     g: makeRoundState(0),
     showIntro: true,
+    tourActive: false,
 
     startGame() {
       stopTimer();
       const g = makeRoundState(0);
       g.phase = 'round-intro';
-      set({ g, showIntro: false });
+      set({ g, showIntro: false, tourActive: false });
     },
 
-    beginRound() {
+    enterFloor() {
+      const round = get().g.roundIndex;
       set((state) => {
         const g = clone(state.g);
         g.phase = 'playing';
+        g.running = false;
+        if (round === 0) seedHolding(g); // bouw-UI alvast zichtbaar tijdens walkthrough
+        return { g, tourActive: round === 0 };
+      });
+      if (round !== 0) get().startClock();
+    },
+
+    startClock() {
+      set((state) => {
+        const g = clone(state.g);
         g.running = true;
-        return { g };
+        return { g, tourActive: false };
       });
       startTimer();
     },
@@ -82,17 +96,17 @@ export const useGame = create<Store>((set, get) => {
       const results = [...cur.roundResults, cur.metrics];
       const nextIdx = cur.roundIndex + 1;
       if (nextIdx >= ROUNDS.length) {
-        set({ g: { ...cur, phase: 'finished', roundResults: results } });
+        set({ g: { ...cur, phase: 'finished', roundResults: results }, tourActive: false });
       } else {
         const g = makeRoundState(nextIdx, results);
         g.phase = 'round-intro';
-        set({ g });
+        set({ g, tourActive: false });
       }
     },
 
     restart() {
       stopTimer();
-      set({ g: makeRoundState(0), showIntro: true });
+      set({ g: makeRoundState(0), showIntro: true, tourActive: false });
     },
   };
 });

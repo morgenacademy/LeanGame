@@ -46,13 +46,14 @@ export const ROUNDS: RoundConfig[] = [
     durationMs: 60000,
     wipLimit: null,
     demandKnownAtStart: false,
-    stationCooldownMs: [800, 850, 900],
+    stationCooldownMs: [1000, 1100, 1200],
     title: 'Ronde 1',
     subtitle: 'Zo snel mogelijk',
     intro: [
-      'De fabriek draait op volle kracht. Ieder station maakt zoveel mogelijk, zo snel mogelijk.',
-      'Jij bent de bouwer. Bouw huizen uit de sets die binnenkomen.',
-      'Welke kleur de klant wil? Dat hoor je pas aan het einde.',
+      'Jij bent de bouwer — de laatste werkplek in de fabriek.',
+      'De fabriek draait op volle kracht: ieder station maakt zoveel mogelijk, zo snel mogelijk.',
+      'Jouw doel: lever zoveel mogelijk huizen die de klant koopt, en maak winst.',
+      'Welke kleur de klant wil? Dat hoor je pas aan het eind — je bouwt dus blind.',
     ],
   },
   {
