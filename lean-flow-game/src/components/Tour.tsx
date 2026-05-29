@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useGame } from '../game/store';
 
 interface Step {
-  target: () => Element | null;
+  /** Eén element, of meerdere (dan omsluit de spotlight ze samen). */
+  target: () => Element | Element[] | null;
   title: string;
   text: string;
 }
@@ -26,9 +27,9 @@ const ROUND1_STEPS: Step[] = [
     text: 'Vier werkplekken op een rij. Werk stroomt van links naar rechts — van losse stenen tot een afgebouwd huis.',
   },
   {
-    target: () => qa('.station')[2] ?? q('.line'),
+    target: () => [...qa('.station')].slice(0, 3),
     title: 'De werkplekken',
-    text: 'Sorteren op kleur → op maat → een set samenstellen. Elke werkplek doet één stap. Het balkje toont hun tempo.',
+    text: 'Het begint links: sorteren op kleur → op maat → een set samenstellen. Elke werkplek doet één stap; het balkje toont hun tempo.',
   },
   {
     target: () => q('.player-station'),
@@ -63,8 +64,18 @@ export function Tour() {
 
   useEffect(() => {
     const measure = () => {
-      const el = step.target();
-      setRect(el ? el.getBoundingClientRect() : null);
+      const t = step.target();
+      if (Array.isArray(t)) {
+        const rs = t.filter(Boolean).map((e) => e.getBoundingClientRect());
+        if (rs.length === 0) return setRect(null);
+        const left = Math.min(...rs.map((r) => r.left));
+        const top = Math.min(...rs.map((r) => r.top));
+        const right = Math.max(...rs.map((r) => r.right));
+        const bottom = Math.max(...rs.map((r) => r.bottom));
+        setRect(new DOMRect(left, top, right - left, bottom - top));
+      } else {
+        setRect(t ? t.getBoundingClientRect() : null);
+      }
     };
     measure();
     window.addEventListener('resize', measure);
