@@ -3,6 +3,7 @@ import { Hud } from './Hud';
 import { Station } from './Station';
 import { BuildStation } from './BuildStation';
 import { Narrator } from './Narrator';
+import { MoneyFloats } from './MoneyFloats';
 import { RAW_SUPPLY, ROUNDS } from '../game/config';
 import { COLOR_HEX } from '../game/colors';
 import type { Color } from '../game/types';
@@ -58,6 +59,7 @@ export function GameBoard() {
       </div>
 
       <Narrator />
+      <MoneyFloats />
     </div>
   );
 }

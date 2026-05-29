@@ -192,6 +192,10 @@ function shipHouse(s: GameState): void {
   }
   s.holding = null;
   s.placedBricks = 0;
+  // Meteen de volgende set pakken zodat de bouwtekening niet flikkert tussen huizen.
+  if (s.stations[3].buffer.length > 0) {
+    s.holding = s.stations[3].buffer.shift()!;
+  }
 }
 
 function endRound(s: GameState): void {

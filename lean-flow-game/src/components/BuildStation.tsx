@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../game/store';
 import { Brick, Pile } from './Brick';
 import { COLORS } from '../game/config';
@@ -20,6 +20,18 @@ export function BuildStation() {
   const target = holding?.color ?? null;
 
   const [drag, setDrag] = useState<Drag | null>(null);
+
+  // Schud alleen bij een échte nieuwe misdrop (delta op g.shake), niet bij remounts.
+  const prevShake = useRef(g.shake);
+  const [shakeAnim, setShakeAnim] = useState(false);
+  useEffect(() => {
+    if (g.shake !== prevShake.current) {
+      prevShake.current = g.shake;
+      setShakeAnim(true);
+      const t = setTimeout(() => setShakeAnim(false), 320);
+      return () => clearTimeout(t);
+    }
+  }, [g.shake]);
 
   // Slepen volgen + droppen op de bouwtekening (werkt voor muis én touch via pointer events).
   useEffect(() => {
@@ -78,7 +90,7 @@ export function BuildStation() {
               &nbsp;· {g.placedBricks}/{g.studsPerHouse}
             </div>
 
-            <div key={g.shake} className={`blueprint dropzone ${g.shake > 0 ? 'shake' : ''}`}>
+            <div className={`blueprint dropzone ${shakeAnim ? 'shake' : ''}`}>
               {Array.from({ length: g.studsPerHouse }).map((_, i) =>
                 i < g.placedBricks ? (
                   <span key={`f${i}`} className="brick-wrap">
