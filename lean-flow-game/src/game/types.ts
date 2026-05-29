@@ -50,6 +50,7 @@ export interface RoundMetrics {
   housesBuilt: number;
   housesSold: number;
   housesUnsold: number;
+  misdrops: number; // verkeerde kleur gesleept = verspilde beweging
   peakWip: number;
   firstHouseMs: number | null;
   revenue: number;
@@ -75,6 +76,7 @@ export interface GameState {
   holding: Unit | null;
   placedBricks: number;
   studsPerHouse: number;
+  shake: number; // telt op bij een verkeerde sleep (voor schud-feedback in de UI)
 
   // Tellers voor unieke id's
   nextUnitId: number;

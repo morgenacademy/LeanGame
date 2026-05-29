@@ -25,6 +25,7 @@ export function emptyMetrics(mode: RoundConfig['mode']): RoundMetrics {
     housesBuilt: 0,
     housesSold: 0,
     housesUnsold: 0,
+    misdrops: 0,
     peakWip: 0,
     firstHouseMs: null,
     revenue: 0,
@@ -63,6 +64,7 @@ export function makeRoundState(roundIndex: number, prevResults: RoundMetrics[] =
     holding: null,
     placedBricks: 0,
     studsPerHouse: STUDS_PER_HOUSE,
+    shake: 0,
     nextUnitId: 1,
     nextHouseId: 1,
     rawReleased: 0,
@@ -131,6 +133,12 @@ export function tick(s: GameState, dt: number): void {
     }
   }
 
+  // Auto-grab: zodra de bouwer vrij is en er een set klaarligt, pakt hij die op.
+  if (!s.holding && s.stations[3].buffer.length > 0) {
+    s.holding = s.stations[3].buffer.shift()!;
+    s.placedBricks = 0;
+  }
+
   const wipNow =
     s.stations[1].buffer.length +
     s.stations[2].buffer.length +
@@ -141,22 +149,21 @@ export function tick(s: GameState, dt: number): void {
   if (s.elapsedMs >= s.roundDurationMs) endRound(s);
 }
 
-/** Speler pakt de volgende set uit buffer D om te gaan bouwen. */
-export function grabSet(s: GameState): void {
-  if (s.phase !== 'playing' || !s.running) return;
-  if (s.holding) return;
-  const d = s.stations[3].buffer;
-  if (d.length === 0) return;
-  s.holding = d.shift()!;
-  s.placedBricks = 0;
-}
-
-/** Speler plaatst één steen; bij de laatste steen gaat het huis naar de markt. */
-export function placeBrick(s: GameState): void {
+/**
+ * Speler sleept een steen naar de bouwtekening. Alleen de juiste kleur telt;
+ * een verkeerde kleur is verspilde beweging (rework). Bij de laatste juiste
+ * steen gaat het huis naar de markt.
+ */
+export function placeBrick(s: GameState, color: Color): void {
   if (s.phase !== 'playing' || !s.running) return;
   if (!s.holding) return;
-  s.placedBricks++;
-  if (s.placedBricks >= s.studsPerHouse) shipHouse(s);
+  if (color === s.holding.color) {
+    s.placedBricks++;
+    if (s.placedBricks >= s.studsPerHouse) shipHouse(s);
+  } else {
+    s.metrics.misdrops++;
+    s.shake++;
+  }
 }
 
 function shipHouse(s: GameState): void {

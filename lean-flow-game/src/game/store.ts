@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { makeRoundState, tick, grabSet, placeBrick } from './engine';
+import { makeRoundState, tick, placeBrick } from './engine';
 import { ROUNDS, TICK_MS } from './config';
-import type { GameState } from './types';
+import type { Color, GameState } from './types';
 
 interface Store {
   g: GameState;
@@ -9,8 +9,7 @@ interface Store {
   showIntro: boolean;
   startGame: () => void;
   beginRound: () => void;
-  grab: () => void;
-  place: () => void;
+  place: (color: Color) => void;
   proceed: () => void;
   restart: () => void;
 }
@@ -69,18 +68,10 @@ export const useGame = create<Store>((set, get) => {
       startTimer();
     },
 
-    grab() {
+    place(color) {
       set((state) => {
         const g = clone(state.g);
-        grabSet(g);
-        return { g };
-      });
-    },
-
-    place() {
-      set((state) => {
-        const g = clone(state.g);
-        placeBrick(g);
+        placeBrick(g, color);
         return { g };
       });
     },

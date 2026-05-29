@@ -1,32 +1,43 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from '../game/store';
 import { Brick, Pile } from './Brick';
+import { COLORS } from '../game/config';
 import { COLOR_HEX, COLOR_LABEL } from '../game/colors';
+import type { Color } from '../game/types';
+
+interface Drag {
+  color: Color;
+  x: number;
+  y: number;
+}
 
 export function BuildStation() {
   const g = useGame((s) => s.g);
-  const grab = useGame((s) => s.grab);
   const place = useGame((s) => s.place);
 
   const queue = g.stations[3].buffer;
   const holding = g.holding;
+  const target = holding?.color ?? null;
 
-  const tap = useCallback(() => {
-    if (holding) place();
-    else grab();
-  }, [holding, place, grab]);
+  const [drag, setDrag] = useState<Drag | null>(null);
 
-  // Spatiebalk = "de handeling" (set pakken / steen plaatsen): geeft een ritme.
+  // Slepen volgen + droppen op de bouwtekening (werkt voor muis én touch via pointer events).
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        tap();
-      }
+    if (!drag) return;
+    const move = (e: PointerEvent) =>
+      setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY } : d));
+    const up = (e: PointerEvent) => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (el && el.closest('.dropzone')) place(drag.color);
+      setDrag(null);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [tap]);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, [drag, place]);
 
   const demand = g.demandRevealed && g.demandColor ? g.demandColor : null;
 
@@ -53,38 +64,67 @@ export function BuildStation() {
           </div>
         </div>
 
-        <button className="build-zone" onClick={tap}>
-          {holding ? (
-            <>
-              <div className="house-slots">
-                {Array.from({ length: g.studsPerHouse }).map((_, i) =>
-                  i < g.placedBricks ? (
-                    <span key={`b${i}`} className="brick-wrap">
-                      <Brick color={holding.color} size={40} />
-                    </span>
-                  ) : (
-                    <span key={`e${i}`} className="slot-empty" />
-                  )
-                )}
+        {holding && target ? (
+          <>
+            <div className="assembly-label">
+              Bouw dit huis:&nbsp;
+              <span className="swatch" style={{ background: COLOR_HEX[target] }} />
+              <strong>{COLOR_LABEL[target]}</strong>
+              &nbsp;· {g.placedBricks}/{g.studsPerHouse}
+            </div>
+
+            <div key={g.shake} className={`blueprint dropzone ${g.shake > 0 ? 'shake' : ''}`}>
+              {Array.from({ length: g.studsPerHouse }).map((_, i) =>
+                i < g.placedBricks ? (
+                  <span key={`f${i}`} className="brick-wrap">
+                    <Brick color={target} size={36} />
+                  </span>
+                ) : (
+                  <span key={`s${i}`} className="slot-ghost" style={{ borderColor: COLOR_HEX[target] }} />
+                )
+              )}
+            </div>
+
+            <div className="tray">
+              <span className="tray-label">⬆ sleep de juiste kleur omhoog</span>
+              <div className="tray-bricks">
+                {COLORS.map((c) => (
+                  <button
+                    key={c}
+                    className="tray-brick"
+                    style={{ background: COLOR_HEX[c] }}
+                    aria-label={COLOR_LABEL[c]}
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      setDrag({ color: c, x: e.clientX, y: e.clientY });
+                    }}
+                  >
+                    <span className="stud" />
+                    <span className="stud" />
+                  </button>
+                ))}
               </div>
-              <div className="build-progress">
-                {g.placedBricks} / {g.studsPerHouse} stenen
-              </div>
-              <div className="build-hint big">klik of spatie — plaats steen</div>
-            </>
-          ) : queue.length > 0 ? (
-            <>
-              <div className="grab-icon">＋</div>
-              <div className="build-hint big">Pak een set</div>
-            </>
-          ) : (
+            </div>
+          </>
+        ) : (
+          <div className="build-zone">
             <div className="waiting">
               <div className="waiting-title">Wachten op materiaal…</div>
               <div className="build-hint">upstream vult bij (WIP-limiet) — de lijn stroomt nog</div>
             </div>
-          )}
-        </button>
+          </div>
+        )}
       </div>
+
+      {drag && (
+        <div
+          className="drag-ghost"
+          style={{ left: drag.x, top: drag.y, background: COLOR_HEX[drag.color] }}
+        >
+          <span className="stud" />
+          <span className="stud" />
+        </div>
+      )}
     </div>
   );
 }

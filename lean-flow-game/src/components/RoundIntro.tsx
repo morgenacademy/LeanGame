@@ -17,7 +17,7 @@ export function RoundIntro() {
           ))}
         </ul>
         <div className="controls-hint">
-          Bedienen: <kbd>spatie</kbd> of klik — set pakken, daarna steen voor steen plaatsen.
+          Bedienen: <kbd>sleep</kbd> de juiste kleur uit de bak omhoog naar de bouwtekening.
         </div>
         <button className="btn-primary" onClick={beginRound}>
           Start {cfg.title.toLowerCase()} →
