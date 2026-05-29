@@ -12,17 +12,27 @@ export function Brick({ color, size = 20 }: { color: Color | null; size?: number
   );
 }
 
-/** Een stapel stenen met een telling; toont maximaal `max` stenen, daarna +N. */
-export function Pile({ colors, max = 10 }: { colors: (Color | null)[]; max?: number }) {
-  const shown = colors.slice(0, max);
-  const extra = colors.length - shown.length;
+export interface PileItem {
+  id: number;
+  color: Color | null;
+}
+
+/**
+ * Een stapel stenen met telling. Items zijn gesleuteld op id, zodat alleen
+ * een nieuw binnengekomen steen de pop-animatie krijgt (de stapel "groeit" zichtbaar).
+ */
+export function Pile({ items, max = 10 }: { items: PileItem[]; max?: number }) {
+  const shown = items.slice(0, max);
+  const extra = items.length - shown.length;
   return (
-    <div className="pile" aria-label={`${colors.length} in wachtrij`}>
-      {shown.map((c, i) => (
-        <Brick key={i} color={c} size={18} />
+    <div className="pile" aria-label={`${items.length} in wachtrij`}>
+      {shown.map((it) => (
+        <span key={it.id} className="brick-wrap">
+          <Brick color={it.color} size={18} />
+        </span>
       ))}
       {extra > 0 && <span className="pile-extra">+{extra}</span>}
-      {colors.length === 0 && <span className="pile-empty">leeg</span>}
+      {items.length === 0 && <span className="pile-empty">leeg</span>}
     </div>
   );
 }

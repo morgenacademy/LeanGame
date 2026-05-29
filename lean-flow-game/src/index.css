@@ -715,6 +715,71 @@ kbd {
   color: var(--white);
 }
 
+/* Werkmeter per station: laat het ritme / de druk van elk station zien */
+.work-meter {
+  height: 5px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0.1rem 0 0.55rem;
+}
+.work-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple-light), var(--accent));
+  border-radius: 3px;
+  transition: width 0.12s linear;
+}
+.work-fill.stalled {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 107, 107, 0.5),
+    rgba(255, 107, 107, 0.5) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+
+/* Steen "popt" zichtbaar de stapel in (stapelen wordt voelbaar) */
+.brick-wrap {
+  display: inline-flex;
+  animation: brick-pop 0.26s cubic-bezier(0.2, 0.8, 0.3, 1.5);
+}
+@keyframes brick-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* De bouwer krijgt meer gewicht — dit is waar JIJ het werk doet */
+.player-station {
+  flex: 1.5 1 0;
+}
+.player-station .build-body {
+  padding: 1rem;
+}
+.build-zone {
+  min-height: 150px;
+}
+.house-slots {
+  gap: 9px;
+}
+.slot-empty {
+  width: 40px;
+  height: 24px;
+}
+.build-progress {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
 /* ============================================================
    Narrator (de coach)
    ============================================================ */

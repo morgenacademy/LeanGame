@@ -34,7 +34,7 @@ export function BuildStation() {
     <div className="station player-station">
       <div className="station-queue">
         <span className="queue-count">{queue.length}</span>
-        <Pile colors={queue.map((u) => u.color)} />
+        <Pile items={queue} />
       </div>
 
       <div className="build-body">
@@ -59,13 +59,18 @@ export function BuildStation() {
               <div className="house-slots">
                 {Array.from({ length: g.studsPerHouse }).map((_, i) =>
                   i < g.placedBricks ? (
-                    <Brick key={i} color={holding.color} size={30} />
+                    <span key={`b${i}`} className="brick-wrap">
+                      <Brick color={holding.color} size={40} />
+                    </span>
                   ) : (
-                    <span key={i} className="slot-empty" />
+                    <span key={`e${i}`} className="slot-empty" />
                   )
                 )}
               </div>
-              <div className="build-hint">klik of spatie — plaats steen</div>
+              <div className="build-progress">
+                {g.placedBricks} / {g.studsPerHouse} stenen
+              </div>
+              <div className="build-hint big">klik of spatie — plaats steen</div>
             </>
           ) : queue.length > 0 ? (
             <>
