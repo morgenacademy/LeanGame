@@ -1,8 +1,10 @@
 import type { Color, RoundMode } from './types';
 
-// --- Economie (Sato/Trindade-getrouw: 16 stenen/huis, huis = $25) ---
+// --- Economie (illustratief: stenen/huis × $1 = kostprijs, huis = $25) ---
+// Marge $13/huis: pull verkoopt vrijwel alles -> winst; push koopt RAW_SUPPLY sets
+// in ongeacht de vraag -> grote overproductie-kost -> verlies. Flip is robuust.
 export const COLORS: Color[] = ['red', 'blue', 'yellow', 'green'];
-export const BRICKS_PER_HOUSE = 16;
+export const BRICKS_PER_HOUSE = 12;
 export const HOUSE_PRICE = 25;
 
 /** Aantal klikken om één huis te bouwen (de hands-on micro-taak). */
@@ -11,8 +13,10 @@ export const STUDS_PER_HOUSE = 4;
 /** Tick-resolutie van de simulatie. */
 export const TICK_MS = 100;
 
-/** Maximaal materiaal dat per ronde uit de bak komt (anders explodeert push). */
-export const RAW_SUPPLY = 24;
+/** Maximaal materiaal dat per ronde uit de bak komt. Hoog genoeg dat push de hele
+ *  ronde blijft overstromen (de bouwer kan het nooit bijbenen). Pull wordt door de
+ *  WIP-limiet geknepen, dus daar raakt deze cap nooit op. */
+export const RAW_SUPPLY = 36;
 
 /** Namen van de vier stations in de lijn (Sato-rollen). */
 export const STATION_DEFS = [
