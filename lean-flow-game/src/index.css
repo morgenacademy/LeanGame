@@ -2963,18 +2963,18 @@ body::before {
 
 .scene-player-panel {
   position: absolute;
-  left: 62%;
-  top: 49%;
+  left: 63%;
+  top: 68%;
   z-index: 4;
-  width: clamp(230px, 18vw, 290px);
-  height: 92px;
+  width: clamp(270px, 23vw, 360px);
+  height: 88px;
   min-width: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, 0);
   pointer-events: none;
   transform-style: preserve-3d;
 }
@@ -3003,24 +3003,57 @@ body::before {
 
 .scene-build-line {
   position: absolute;
-  left: 3%;
-  top: -42px;
+  left: 0;
+  top: 0;
   z-index: 3;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   margin: 0;
-  padding: 4px 8px;
-  min-width: 186px;
+  padding: 7px 10px;
+  min-width: 0;
+  width: 100%;
   border: 1px solid rgba(216, 254, 86, 0.54);
   background: rgba(2, 5, 3, 0.76);
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.32);
   color: #f4f8ff;
   font-size: 0.75rem;
   letter-spacing: 0.02em;
-  transform: skewX(-6deg);
-  transform-origin: left center;
+  transform: none;
   pointer-events: none;
+}
+
+.scene-build-copy {
+  min-width: 0;
+}
+
+.scene-build-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.scene-build-hint {
+  margin-top: 2px;
+  color: rgba(245, 248, 255, 0.68);
+  font-size: 0.66rem;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.scene-blueprint-art {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 54px;
+  margin: 0;
+  border: 1px solid rgba(216, 254, 86, 0.34);
+  background:
+    linear-gradient(rgba(216, 254, 86, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 254, 86, 0.11) 1px, transparent 1px),
+    rgba(0, 0, 0, 0.24);
+  background-size: 12px 12px;
 }
 
 .scene-swatch {
@@ -3068,7 +3101,14 @@ body::before {
 }
 
 .scene-tray-label {
-  display: none;
+  position: absolute;
+  left: 11px;
+  top: 65px;
+  display: block;
+  color: rgba(245, 248, 255, 0.54);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .scene-tray {
@@ -3102,13 +3142,15 @@ body::before {
 
 .scene-waiting {
   position: absolute;
-  inset: 50px 42px;
+  inset: 0;
   z-index: 3;
-  min-height: 92px;
+  min-height: 54px;
   display: grid;
   place-items: center;
+  border: 1px solid rgba(245, 248, 255, 0.36);
+  background: rgba(2, 5, 3, 0.64);
   color: rgba(246, 250, 255, 0.74);
-  transform: perspective(680px) rotateX(56deg) skewX(-7deg);
+  transform: none;
 }
 
 .scene-drag-ghost {
@@ -3237,11 +3279,11 @@ body::before {
   }
 
   .scene-player-panel {
-    left: 67%;
+    left: 63%;
     right: auto;
-    top: 55%;
+    top: 69%;
     width: min(275px, calc(100% - 36px));
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0);
   }
 
   .scene-flow-panel,

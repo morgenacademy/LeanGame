@@ -17,7 +17,7 @@ export function RoundIntro() {
           ))}
         </ul>
         <div className="controls-hint">
-          Bedienen: <kbd>sleep</kbd> de juiste kleur uit de bak omhoog naar de bouwtekening.
+          Bedienen: <kbd>sleep</kbd> onderdelen uit jouw set naar de bouwvakken.
         </div>
         <button className="btn-primary" onClick={enterFloor}>
           {g.roundIndex === 0 ? 'Loop de werkvloer op →' : `Start ${cfg.title.toLowerCase()} →`}

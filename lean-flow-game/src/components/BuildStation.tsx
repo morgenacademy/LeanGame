@@ -88,7 +88,7 @@ export function BuildStation() {
             </div>
 
             <div className="tray">
-              <span className="tray-label">⬆ sleep de juiste kleur omhoog</span>
+              <span className="tray-label">sleep onderdelen naar de bouwvakken</span>
               <div className="tray-bricks">
                 {COLORS.map((c) => (
                   <button

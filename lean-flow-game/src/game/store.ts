@@ -83,11 +83,15 @@ export const useGame = create<Store>((set, get) => {
     },
 
     place(color) {
+      let shouldStart = false;
       set((state) => {
         const g = clone(state.g);
+        shouldStart = g.phase === 'playing' && !g.running;
+        if (shouldStart) g.running = true;
         placeBrick(g, color);
-        return { g };
+        return { g, tourActive: shouldStart ? false : state.tourActive };
       });
+      if (shouldStart) startTimer();
     },
 
     proceed() {

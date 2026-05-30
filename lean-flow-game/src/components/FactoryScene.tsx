@@ -4,8 +4,9 @@ import * as THREE from 'three';
 import { useGame } from '../game/store';
 import { COLORS, RAW_SUPPLY } from '../game/config';
 import { COLOR_HEX, COLOR_LABEL } from '../game/colors';
-import type { Color, GameState, Unit } from '../game/types';
+import type { BuiltHouse, Color, GameState, Unit } from '../game/types';
 import { Brick } from './Brick';
+import { HouseStagesSvg } from './icons';
 
 interface Drag {
   color: Color;
@@ -18,6 +19,15 @@ interface SceneRuntime {
   hitTest: (clientX: number, clientY: number) => Color | null;
   dropTest: (clientX: number, clientY: number) => boolean;
   dispose: () => void;
+}
+
+interface TransferVisual {
+  group: THREE.Group;
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  createdAt: number;
+  duration: number;
+  spin: boolean;
 }
 
 const STATION_LAYOUT = [
@@ -48,6 +58,7 @@ export function FactoryScene() {
       setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY } : d));
     const up = (e: PointerEvent) => {
       if (runtimeRef.current?.dropTest(e.clientX, e.clientY)) place(drag.color);
+      if (canvasRef.current) canvasRef.current.style.cursor = 'default';
       setDrag(null);
     };
     window.addEventListener('pointermove', move);
@@ -62,7 +73,13 @@ export function FactoryScene() {
     const color = runtimeRef.current?.hitTest(e.clientX, e.clientY);
     if (!color) return;
     e.preventDefault();
+    e.currentTarget.style.cursor = 'grabbing';
     setDrag({ color, x: e.clientX, y: e.clientY });
+  };
+
+  const updateCursor = (e: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (drag) return;
+    e.currentTarget.style.cursor = runtimeRef.current?.hitTest(e.clientX, e.clientY) ? 'grab' : 'default';
   };
 
   useEffect(() => {
@@ -81,7 +98,13 @@ export function FactoryScene() {
 
   return (
     <div className="line factory-scene-shell" ref={shellRef}>
-      <canvas className="factory-canvas" ref={canvasRef} aria-hidden onPointerDown={startDrag} />
+      <canvas
+        className="factory-canvas"
+        ref={canvasRef}
+        aria-hidden
+        onPointerDown={startDrag}
+        onPointerMove={updateCursor}
+      />
       <PlayerBuildPanel g={g} drag={drag} />
       <FlowStatus mode={g.mode} />
       <BlockLegend />
@@ -93,6 +116,8 @@ export function FactoryScene() {
 function PlayerBuildPanel({ g, drag }: { g: GameState; drag: Drag | null }) {
   const holding = g.holding;
   const target = holding?.color ?? null;
+  const inventoryCount = (holding ? 1 : 0) + g.stations[3].buffer.length;
+  const remainingParts = holding ? Math.max(0, g.studsPerHouse - g.placedBricks) : 0;
 
   return (
     <div className="scene-player-panel player-station">
@@ -105,14 +130,24 @@ function PlayerBuildPanel({ g, drag }: { g: GameState; drag: Drag | null }) {
       {holding && target ? (
         <>
           <div className="scene-build-line">
-            <span>Bouw dit huis:</span>
-            <span className="scene-swatch" style={{ background: COLOR_HEX[target] }} />
-            <strong>{COLOR_LABEL[target]}</strong>
-            <span>
-              {g.placedBricks}/{g.studsPerHouse}
-            </span>
+            <SceneBuildBlueprint color={target} stage={g.placedBricks} />
+            <div className="scene-build-copy">
+              <div className="scene-build-title">
+                <span>Bouw dit huis:</span>
+                <span className="scene-swatch" style={{ background: COLOR_HEX[target] }} />
+                <strong>{COLOR_LABEL[target]}</strong>
+                <span>
+                  {g.placedBricks}/{g.studsPerHouse}
+                </span>
+              </div>
+              <div className="scene-build-hint">
+                {remainingParts > 0
+                  ? `${remainingParts} onderdeel${remainingParts === 1 ? '' : 'en'} over in deze set`
+                  : 'huis klaar, naar de markt'}
+              </div>
+            </div>
           </div>
-          <div className="scene-tray-label">sleep een 3D-steen naar de bouwvakken</div>
+          <div className="scene-tray-label">sets bij bouwstation: {inventoryCount}</div>
         </>
       ) : (
         <div className="scene-waiting">Wachten op materiaal</div>
@@ -123,6 +158,15 @@ function PlayerBuildPanel({ g, drag }: { g: GameState; drag: Drag | null }) {
           <Brick color={drag.color} size={40} />
         </div>
       )}
+    </div>
+  );
+}
+
+function SceneBuildBlueprint({ color, stage }: { color: Color; stage: number }) {
+  return (
+    <div className="scene-blueprint-art house-stages-wrap" style={{ color: COLOR_HEX[color] }}>
+      <HouseStagesSvg className="house-ghost" />
+      <HouseStagesSvg key={stage} className={`house-built s${stage}`} />
     </div>
   );
 }
@@ -197,14 +241,14 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
 
   const beltTexture = makeBeltTexture();
   const beltMats: THREE.MeshBasicMaterial[] = [];
-  const movers: THREE.Mesh[] = [];
+  const transfers: TransferVisual[] = [];
   const robot = new THREE.Group();
-  const trayHitMeshes: THREE.Mesh[] = [];
+  const inventoryHitMeshes: THREE.Mesh[] = [];
   const dropHitMeshes: THREE.Mesh[] = [];
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
-  buildStaticScene(root, beltTexture, beltMats, movers, robot, trayHitMeshes, dropHitMeshes);
+  buildStaticScene(root, beltTexture, beltMats, robot, dropHitMeshes);
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.9);
   scene.add(ambient);
@@ -247,16 +291,8 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
     for (const mat of beltMats) {
       if (mat.map) mat.map.offset.x = -t * 0.55;
     }
-    movers.forEach((m, i) => {
-      const p = (t * 0.22 + i * 0.24) % 1;
-      m.position.x = THREE.MathUtils.lerp(-7.55, 7.45, p);
-      m.position.z = 1.22 + Math.sin((p + i) * Math.PI * 2) * 0.04;
-      m.rotation.y = t * 0.8 + i;
-    });
-    robot.rotation.y = Math.sin(t * 1.8) * 0.18;
-    robot.children.forEach((child, i) => {
-      child.rotation.z += Math.sin(t * 2 + i) * 0.0008;
-    });
+    updateTransfers(root, transfers, t);
+    robot.rotation.y = -0.18 + Math.sin(t * 1.6) * 0.16;
     renderer.render(scene, camera);
     raf = requestAnimationFrame(animate);
   };
@@ -264,11 +300,13 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
 
   return {
     sync(g) {
+      if (currentState) enqueueProcessTransfers(root, transfers, currentState, g, clock.getElapsedTime());
       currentState = g;
-      rebuildDynamic(dynamic, currentState);
+      inventoryHitMeshes.length = 0;
+      rebuildDynamic(dynamic, currentState, inventoryHitMeshes);
     },
     hitTest(clientX, clientY) {
-      const hits = raycast(clientX, clientY, canvas, camera, raycaster, pointer, trayHitMeshes);
+      const hits = raycast(clientX, clientY, canvas, camera, raycaster, pointer, inventoryHitMeshes);
       const color = hits[0]?.object.userData.color;
       return isColor(color) ? color : null;
     },
@@ -289,9 +327,7 @@ function buildStaticScene(
   root: THREE.Group,
   beltTexture: THREE.CanvasTexture,
   beltMats: THREE.MeshBasicMaterial[],
-  movers: THREE.Mesh[],
   robot: THREE.Group,
-  trayHitMeshes: THREE.Mesh[],
   dropHitMeshes: THREE.Mesh[]
 ) {
   const floor = new THREE.Mesh(
@@ -317,19 +353,11 @@ function buildStaticScene(
   createPlatform(root, STATION_LAYOUT[3].x, STATION_LAYOUT[3].z, 2.85, 2.65, true);
   createSign(root, STATION_LAYOUT[3].x, 0.12, 'BOUW', 'PLAYER');
   createPlayerDeck(root, robot, STATION_LAYOUT[3].x);
-  createBuildWorkbench(root, STATION_LAYOUT[3].x, trayHitMeshes, dropHitMeshes);
+  createBuildWorkbench(root, STATION_LAYOUT[3].x, dropHitMeshes);
 
   createPlatform(root, STATION_LAYOUT[4].x, STATION_LAYOUT[4].z, 2.45, 2.05, false);
   createSign(root, STATION_LAYOUT[4].x, 0.2, 'MARKT', 'CART');
   createMarketStall(root, STATION_LAYOUT[4].x);
-
-  const moverColors = [0xe47b22, 0x2d91df, 0x4ac05f, 0xf0c433];
-  moverColors.forEach((color) => {
-    const cube = createCubeMesh(color, 0.32);
-    cube.position.set(-8.4, 0.55, 1.24);
-    root.add(cube);
-    movers.push(cube);
-  });
 }
 
 function raycast(
@@ -350,6 +378,125 @@ function raycast(
 
 function isColor(value: unknown): value is Color {
   return typeof value === 'string' && COLORS.includes(value as Color);
+}
+
+function enqueueProcessTransfers(
+  root: THREE.Group,
+  transfers: TransferVisual[],
+  prev: GameState,
+  next: GameState,
+  now: number
+) {
+  for (let i = 0; i < 3; i++) {
+    const producedDelta = next.stations[i].produced - prev.stations[i].produced;
+    for (let n = 0; n < producedDelta; n++) {
+      const color = i === 2 ? latestSetColor(next) : null;
+      addTransfer(root, transfers, createTransferMesh(i, color), segmentStart(i), segmentEnd(i), now, 1.15);
+    }
+  }
+
+  const builtDelta = next.built.length - prev.built.length;
+  for (let n = 0; n < builtDelta; n++) {
+    const house = next.built[next.built.length - 1 - n];
+    if (house) {
+      addTransfer(root, transfers, createHouseMesh(house.color, 0.78), segmentStart(3), segmentEnd(3), now, 1.05);
+      if (house.sold) {
+        addTransfer(
+          root,
+          transfers,
+          createPickupTruck(house.color),
+          marketPickupStart(),
+          marketPickupEnd(),
+          now + 0.95,
+          1.35
+        );
+      }
+    }
+  }
+}
+
+function latestSetColor(g: GameState): Color {
+  return (
+    g.stations[3].buffer[g.stations[3].buffer.length - 1]?.color ??
+    g.holding?.color ??
+    g.demandColor ??
+    COLORS[0]
+  );
+}
+
+function segmentStart(index: number) {
+  const starts = [
+    STATION_LAYOUT[0].x + 1.05,
+    STATION_LAYOUT[1].x + 1.05,
+    STATION_LAYOUT[2].x + 1.05,
+    STATION_LAYOUT[3].x + 1.1,
+  ];
+  return new THREE.Vector3(starts[index], 0.58, 1.24);
+}
+
+function segmentEnd(index: number) {
+  const ends = [
+    STATION_LAYOUT[1].x - 1.05,
+    STATION_LAYOUT[2].x - 1.05,
+    STATION_LAYOUT[3].x - 1.1,
+    STATION_LAYOUT[4].x - 1.1,
+  ];
+  return new THREE.Vector3(ends[index], 0.58, 1.24);
+}
+
+function marketPickupStart() {
+  return new THREE.Vector3(STATION_LAYOUT[4].x + 0.15, 0.55, 0.52);
+}
+
+function marketPickupEnd() {
+  return new THREE.Vector3(STATION_LAYOUT[4].x + 2.5, 0.55, -0.42);
+}
+
+function addTransfer(
+  root: THREE.Group,
+  transfers: TransferVisual[],
+  group: THREE.Group,
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  now: number,
+  duration: number,
+  spin = false
+) {
+  group.position.copy(start);
+  root.add(group);
+  transfers.push({ group, start, end, createdAt: now, duration, spin });
+}
+
+function updateTransfers(root: THREE.Group, transfers: TransferVisual[], now: number) {
+  for (let i = transfers.length - 1; i >= 0; i--) {
+    const transfer = transfers[i];
+    const rawP = (now - transfer.createdAt) / transfer.duration;
+    if (rawP < 0) {
+      transfer.group.position.copy(transfer.start);
+      continue;
+    }
+    const p = Math.min(1, rawP);
+    transfer.group.position.lerpVectors(transfer.start, transfer.end, easeInOut(p));
+    transfer.group.position.y += Math.sin(p * Math.PI) * 0.04;
+    if (transfer.spin) transfer.group.rotation.y += 0.025;
+    if (p >= 1) {
+      root.remove(transfer.group);
+      disposeObject(transfer.group);
+      transfers.splice(i, 1);
+    }
+  }
+}
+
+function easeInOut(t: number) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+function createTransferMesh(stationIndex: number, color: Color | null) {
+  if (stationIndex === 2 && color) {
+    return createSetPack(color, 0.78);
+  }
+
+  return stationIndex === 1 ? createSizedPiece(0.95) : createRawPiece(0.95);
 }
 
 function createPlatform(root: THREE.Group, x: number, z: number, w: number, d: number, highlight: boolean) {
@@ -423,38 +570,52 @@ function createFeeder(root: THREE.Group, x: number, z: number) {
 }
 
 function createPlayerDeck(root: THREE.Group, robot: THREE.Group, x: number) {
-  robot.position.set(x + 0.68, 0.74, -0.72);
+  robot.position.set(x + 0.62, 0.74, -0.64);
   root.add(robot);
 
-  const base = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.22, 0.27, 0.18, 20),
-    new THREE.MeshStandardMaterial({ color: 0xb7f21f, roughness: 0.35, metalness: 0.2 })
-  );
-  base.position.y = 0.1;
+  const lime = new THREE.MeshStandardMaterial({ color: 0xb7f21f, roughness: 0.3, metalness: 0.28 });
+  const bright = new THREE.MeshStandardMaterial({ color: 0xd8fe56, roughness: 0.28, metalness: 0.24 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x425006, roughness: 0.34, metalness: 0.45 });
+
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 0.22, 28), lime);
+  base.position.y = 0.12;
   robot.add(base);
 
-  const arm1 = new THREE.Mesh(
-    new THREE.BoxGeometry(0.18, 0.82, 0.18),
-    new THREE.MeshStandardMaterial({ color: 0xb7f21f, roughness: 0.34, metalness: 0.24 })
-  );
-  arm1.position.set(0.12, 0.55, 0);
-  arm1.rotation.z = -0.52;
-  robot.add(arm1);
+  const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.23, 24, 14), bright);
+  shoulder.position.set(0.03, 0.34, 0);
+  robot.add(shoulder);
 
-  const arm2 = new THREE.Mesh(
-    new THREE.BoxGeometry(0.16, 0.62, 0.16),
-    new THREE.MeshStandardMaterial({ color: 0xd8fe56, roughness: 0.34, metalness: 0.2 })
-  );
-  arm2.position.set(0.48, 0.94, 0);
-  arm2.rotation.z = 0.72;
-  robot.add(arm2);
+  const upper = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.94, 0.24), lime);
+  upper.position.set(0.25, 0.76, 0);
+  upper.rotation.z = -0.62;
+  robot.add(upper);
 
-  const claw = new THREE.Mesh(
-    new THREE.BoxGeometry(0.42, 0.09, 0.16),
-    new THREE.MeshStandardMaterial({ color: 0xd8fe56, roughness: 0.34, metalness: 0.2 })
-  );
-  claw.position.set(0.76, 1.08, 0);
-  robot.add(claw);
+  const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.19, 22, 12), dark);
+  elbow.position.set(0.55, 1.12, 0);
+  robot.add(elbow);
+
+  const forearm = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.78, 0.2), bright);
+  forearm.position.set(0.83, 1.18, 0);
+  forearm.rotation.z = 1.18;
+  robot.add(forearm);
+
+  const wrist = new THREE.Mesh(new THREE.SphereGeometry(0.13, 18, 10), dark);
+  wrist.position.set(1.18, 1.18, 0);
+  robot.add(wrist);
+
+  const clawBar = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.08, 0.12), bright);
+  clawBar.position.set(1.38, 1.18, 0);
+  robot.add(clawBar);
+
+  const clawA = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, 0.08), bright);
+  clawA.position.set(1.58, 1.1, -0.1);
+  clawA.rotation.z = 0.28;
+  robot.add(clawA);
+
+  const clawB = clawA.clone();
+  clawB.position.z = 0.1;
+  clawB.rotation.z = -0.28;
+  robot.add(clawB);
 
   robot.traverse((o) => {
     if (o instanceof THREE.Mesh) {
@@ -464,12 +625,7 @@ function createPlayerDeck(root: THREE.Group, robot: THREE.Group, x: number) {
   });
 }
 
-function createBuildWorkbench(
-  root: THREE.Group,
-  x: number,
-  trayHitMeshes: THREE.Mesh[],
-  dropHitMeshes: THREE.Mesh[]
-) {
+function createBuildWorkbench(root: THREE.Group, x: number, dropHitMeshes: THREE.Mesh[]) {
   const group = new THREE.Group();
   group.position.set(x, 0, 0);
   root.add(group);
@@ -500,22 +656,26 @@ function createBuildWorkbench(
     createSlotFrame(group, -0.57 + i * 0.38, 0.78, 0.42);
   }
 
+  const inputRail = new THREE.Mesh(
+    new THREE.BoxGeometry(1.22, 0.055, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xd8fe56, roughness: 0.35, metalness: 0.2 })
+  );
+  inputRail.position.set(-0.52, 0.65, 1.08);
+  group.add(inputRail);
+
+  const bufferRail = inputRail.clone();
+  bufferRail.position.set(0.58, 0.65, 1.08);
+  bufferRail.material = new THREE.MeshStandardMaterial({
+    color: 0x9aa3a8,
+    roughness: 0.4,
+    metalness: 0.2,
+  });
+  group.add(bufferRail);
+
   const drop = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.18, 0.55), hitMat);
   drop.position.set(0, 0.68, 0.42);
   group.add(drop);
   dropHitMeshes.push(drop);
-
-  COLORS.forEach((color, i) => {
-    const cube = createCubeMesh(COLOR_HEX[color], 0.34);
-    cube.position.set(-0.72 + i * 0.48, 0.7, 1.03);
-    group.add(cube);
-
-    const hit = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), hitMat);
-    hit.position.copy(cube.position);
-    hit.userData.color = color;
-    group.add(hit);
-    trayHitMeshes.push(hit);
-  });
 }
 
 function createSlotFrame(root: THREE.Group, x: number, y: number, z: number) {
@@ -593,19 +753,24 @@ function addEdges(mesh: THREE.Mesh, color: number) {
   mesh.add(edges);
 }
 
-function rebuildDynamic(dynamic: THREE.Group, g: GameState) {
+function rebuildDynamic(dynamic: THREE.Group, g: GameState, inventoryHitMeshes: THREE.Mesh[]) {
   while (dynamic.children.length) {
     const child = dynamic.children.pop();
     if (child) disposeObject(child);
   }
 
   const rawLeft = Math.max(0, RAW_SUPPLY - g.rawReleased);
-  addBlockCluster(dynamic, STATION_LAYOUT[0].x - 0.18, 0.06, rawItems(rawLeft), 12, 4);
-  addBlockCluster(dynamic, STATION_LAYOUT[1].x - 0.1, -0.06, g.stations[1].buffer, 10, 3);
-  addBlockCluster(dynamic, STATION_LAYOUT[2].x - 0.08, 0.05, g.stations[2].buffer, 8, 2);
-  addBlockCluster(dynamic, STATION_LAYOUT[3].x - 0.3, 0.0, g.stations[3].buffer, 8, 4);
+  addRawCluster(dynamic, STATION_LAYOUT[0].x - 0.18, 0.06, rawItems(rawLeft), 12, 4);
+  addRawCluster(dynamic, STATION_LAYOUT[1].x - 0.1, -0.06, g.stations[1].buffer, 10, 3);
+  addSizedCluster(dynamic, STATION_LAYOUT[2].x - 0.08, 0.05, g.stations[2].buffer, 8, 2);
+  addPlayerInventory(dynamic, g, inventoryHitMeshes);
+  addBuildCue(dynamic, g);
 
-  if (g.holding?.color) {
+  if (g.holding?.color && g.houseCompleteAtMs != null) {
+    const house = createHouseMesh(g.holding.color, 0.82);
+    house.position.set(STATION_LAYOUT[3].x - 0.12, 0.75, 0.42);
+    dynamic.add(house);
+  } else if (g.holding?.color) {
     for (let i = 0; i < g.placedBricks; i++) {
       const cube = createCubeMesh(COLOR_HEX[g.holding.color], 0.34);
       cube.position.set(STATION_LAYOUT[3].x - 0.57 + i * 0.38, 0.74, 0.42);
@@ -613,14 +778,79 @@ function rebuildDynamic(dynamic: THREE.Group, g: GameState) {
     }
   }
 
-  const built = g.built.slice(-5).map((h) => ({ id: h.id, color: h.color, startedAtMs: h.builtAtMs }));
-  addBlockCluster(dynamic, STATION_LAYOUT[4].x - 0.2, 0.04, built, 5, 5);
+  addHouseCluster(dynamic, STATION_LAYOUT[4].x - 0.18, 0.12, g.built.filter((h) => !h.sold).slice(-6), 6, 3);
+  addMarketDemand(dynamic, g);
+}
 
-  if (g.demandRevealed && g.demandColor) {
-    const demand = createCubeMesh(COLOR_HEX[g.demandColor], 0.28);
-    demand.position.set(STATION_LAYOUT[4].x + 0.68, 1.02, -0.55);
-    dynamic.add(demand);
+function addPlayerInventory(group: THREE.Group, g: GameState, inventoryHitMeshes: THREE.Mesh[]) {
+  const stationX = STATION_LAYOUT[3].x;
+  const active = g.holding;
+  const queued = g.stations[3].buffer.slice(0, 5);
+
+  queued.forEach((item, i) => {
+    const color = item.color ?? g.demandColor ?? COLORS[0];
+    const pack = createSetPack(color, 0.58);
+    const row = Math.floor(i / 3);
+    const col = i % 3;
+    pack.position.set(stationX + 0.26 + col * 0.34, 0.7, 1.0 - row * 0.3);
+    pack.rotation.y = 0.08;
+    group.add(pack);
+  });
+
+  if (!active?.color) return;
+
+  const remaining = Math.max(0, g.studsPerHouse - g.placedBricks);
+  if (remaining > 0) {
+    const pack = createSetPack(active.color, 0.9, remaining);
+    pack.position.set(stationX - 0.58, 0.72, 1.02);
+    pack.rotation.y = -0.06;
+    group.add(pack);
   }
+
+  if (remaining === 0 || g.houseCompleteAtMs != null) return;
+
+  const hit = new THREE.Mesh(
+    new THREE.BoxGeometry(1.35, 0.72, 0.74),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })
+  );
+  hit.position.set(stationX - 0.58, 0.78, 1.02);
+  hit.userData.color = active.color;
+  group.add(hit);
+  inventoryHitMeshes.push(hit);
+}
+
+function addBuildCue(group: THREE.Group, g: GameState) {
+  if (!g.holding?.color || g.houseCompleteAtMs != null) return;
+  const remaining = Math.max(0, g.studsPerHouse - g.placedBricks);
+  if (remaining === 0) return;
+
+  const stationX = STATION_LAYOUT[3].x;
+  const nextSlotX = stationX - 0.57 + Math.min(g.placedBricks, g.studsPerHouse - 1) * 0.38;
+  const source = new THREE.Vector3(stationX - 0.58, 0.9, 0.86);
+  const target = new THREE.Vector3(nextSlotX, 0.9, 0.42);
+  const pulse = 0.55 + Math.sin(g.elapsedMs / 180) * 0.22;
+  const mat = new THREE.LineBasicMaterial({
+    color: 0xd8fe56,
+    transparent: true,
+    opacity: pulse,
+  });
+  const line = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([
+      source,
+      new THREE.Vector3((source.x + target.x) / 2, 1.0, (source.z + target.z) / 2),
+      target,
+    ]),
+    mat
+  );
+  group.add(line);
+
+  const targetRing = new THREE.Mesh(
+    new THREE.TorusGeometry(0.19, 0.013, 8, 32),
+    new THREE.MeshBasicMaterial({ color: 0xd8fe56, transparent: true, opacity: Math.min(1, pulse + 0.16) })
+  );
+  targetRing.position.copy(target);
+  targetRing.rotation.x = Math.PI / 2;
+  group.add(targetRing);
 }
 
 function rawItems(count: number): Unit[] {
@@ -631,11 +861,60 @@ function rawItems(count: number): Unit[] {
   }));
 }
 
-function addBlockCluster(
+function addRawCluster(
   group: THREE.Group,
   x: number,
   z: number,
   items: Pick<Unit, 'id' | 'color'>[],
+  max: number,
+  cols: number
+) {
+  addUnitCluster(group, x, z, items, max, cols, (i) => {
+    const raw = createRawPiece(0.86);
+    raw.rotation.y = (i % 3 - 1) * 0.16;
+    raw.rotation.z = (i % 2 === 0 ? 1 : -1) * 0.04;
+    return raw;
+  });
+}
+
+function addSizedCluster(
+  group: THREE.Group,
+  x: number,
+  z: number,
+  items: Pick<Unit, 'id' | 'color'>[],
+  max: number,
+  cols: number
+) {
+  addUnitCluster(group, x, z, items, max, cols, () => createSizedPiece(0.9));
+}
+
+function addUnitCluster(
+  group: THREE.Group,
+  x: number,
+  z: number,
+  items: Pick<Unit, 'id' | 'color'>[],
+  max: number,
+  cols: number,
+  createUnit: (index: number) => THREE.Group
+) {
+  const shown = items.slice(0, max);
+  const rows = Math.max(1, Math.ceil(shown.length / cols));
+  shown.forEach((_, i) => {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    const unit = createUnit(i);
+    const xOffset = (col - (cols - 1) / 2) * 0.38;
+    const zOffset = (row - (rows - 1) / 2) * 0.36;
+    unit.position.set(x + xOffset, 0.74, z + zOffset);
+    group.add(unit);
+  });
+}
+
+function addHouseCluster(
+  group: THREE.Group,
+  x: number,
+  z: number,
+  items: Pick<BuiltHouse, 'id' | 'color' | 'sold'>[],
   max: number,
   cols: number
 ) {
@@ -644,13 +923,32 @@ function addBlockCluster(
   shown.forEach((item, i) => {
     const row = Math.floor(i / cols);
     const col = i % cols;
-    const color = item.color ? COLOR_HEX[item.color] : '#6e5f86';
-    const cube = createCubeMesh(color, 0.32);
-    const xOffset = (col - (cols - 1) / 2) * 0.38;
-    const zOffset = (row - (rows - 1) / 2) * 0.36;
-    cube.position.set(x + xOffset, 0.74, z + zOffset);
+    const house = createHouseMesh(item.color, 0.58);
+    const xOffset = (col - (cols - 1) / 2) * 0.42;
+    const zOffset = (row - (rows - 1) / 2) * 0.42;
+    house.position.set(x + xOffset, 0.74, z + zOffset);
+    group.add(house);
+  });
+}
+
+function createSetPack(color: Color, scale = 1) {
+  const group = new THREE.Group();
+  const size = 0.25 * scale;
+  const spacing = 0.28 * scale;
+  const positions = [
+    [-spacing / 2, 0, -spacing / 2],
+    [spacing / 2, 0, -spacing / 2],
+    [-spacing / 2, 0, spacing / 2],
+    [spacing / 2, 0, spacing / 2],
+  ] as const;
+
+  positions.forEach(([x, y, z]) => {
+    const cube = createCubeMesh(COLOR_HEX[color], size);
+    cube.position.set(x, y, z);
     group.add(cube);
   });
+
+  return group;
 }
 
 function createCubeMesh(color: string | number, size: number) {
@@ -667,7 +965,59 @@ function createCubeMesh(color: string | number, size: number) {
   cube.castShadow = true;
   cube.receiveShadow = true;
   addEdges(cube, 0x101418);
+  addStuds(cube, c, size);
   return cube;
+}
+
+function addStuds(cube: THREE.Mesh, color: THREE.Color, size: number) {
+  const studMat = new THREE.MeshStandardMaterial({
+    color: color.clone().lerp(new THREE.Color(0xffffff), 0.18),
+    roughness: 0.38,
+    metalness: 0.08,
+  });
+  const radius = size * 0.105;
+  const height = size * 0.055;
+  const offset = size * 0.18;
+  for (const x of [-offset, offset]) {
+    for (const z of [-offset, offset]) {
+      const stud = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 14), studMat);
+      stud.position.set(x, size / 2 + height / 2, z);
+      stud.castShadow = true;
+      cube.add(stud);
+    }
+  }
+}
+
+function createHouseMesh(color: Color, scale = 1) {
+  const group = new THREE.Group();
+  const bodyColor = new THREE.Color(COLOR_HEX[color]);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.42, metalness: 0.08 });
+  const roofMat = new THREE.MeshStandardMaterial({
+    color: bodyColor.clone().multiplyScalar(0.7),
+    roughness: 0.36,
+    metalness: 0.12,
+  });
+  const lineMat = new THREE.MeshBasicMaterial({ color: 0xf4f8ff, transparent: true, opacity: 0.85 });
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.46 * scale, 0.34 * scale, 0.38 * scale), bodyMat);
+  body.position.y = 0.17 * scale;
+  body.castShadow = true;
+  body.receiveShadow = true;
+  group.add(body);
+  addEdges(body, 0x101418);
+
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.36 * scale, 0.28 * scale, 4), roofMat);
+  roof.position.y = 0.48 * scale;
+  roof.rotation.y = Math.PI / 4;
+  roof.castShadow = true;
+  roof.receiveShadow = true;
+  group.add(roof);
+
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.12 * scale, 0.18 * scale, 0.012 * scale), lineMat);
+  door.position.set(0, 0.1 * scale, 0.197 * scale);
+  group.add(door);
+
+  return group;
 }
 
 function makeSignTexture(label: string, icon: string) {

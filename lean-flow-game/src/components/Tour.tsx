@@ -34,7 +34,7 @@ const ROUND1_STEPS: Step[] = [
   {
     target: () => q('.player-station'),
     title: 'Dit ben JIJ, de bouwer',
-    text: 'Jij bent de laatste werkplek. Je bouwt het huis: sleep de juiste kleur uit de bak omhoog naar de bouwtekening.',
+    text: 'Jij bent de laatste werkplek. Je bouwt het huis: sleep onderdelen uit jouw set naar de bouwvakken.',
   },
   {
     target: () => q('.market'),
