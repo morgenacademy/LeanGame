@@ -34,7 +34,7 @@ export function BuildStation() {
     }
   }, [g.shake]);
 
-  // Slepen volgen + droppen op de bouwtekening (werkt voor muis én touch via pointer events).
+  // Slepen volgen + droppen op de bouwvakken (werkt voor muis én touch via pointer events).
   useEffect(() => {
     if (!drag) return;
     const move = (e: PointerEvent) =>
@@ -129,7 +129,7 @@ export function BuildStation() {
 /**
  * Het huis groeit in fases: per geplaatste steen tonen we een extra bouwgroep
  * (stage-1..4) uit house-stages.svg. De ghost-laag toont vaag het hele huis als
- * bouwtekening, zodat je het doel ziet.
+ * bouwplaats, zodat je het doel ziet.
  */
 function HouseStages({ stage, color, size = 100 }: { stage: number; color: Color; size?: number }) {
   return (

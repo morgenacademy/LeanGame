@@ -29,7 +29,7 @@ const ROUND1_STEPS: Step[] = [
   {
     target: () => [...qa('.station')].slice(0, 3),
     title: 'De werkplekken',
-    text: 'Het begint links: sorteren op kleur → op maat → een set samenstellen. Elke werkplek doet één stap; het balkje toont hun tempo.',
+    text: 'Het begint links: sorteren op kleur → op maat → een set samenstellen. Het set-station wacht tot er vier onderdelen liggen.',
   },
   {
     target: () => q('.player-station'),

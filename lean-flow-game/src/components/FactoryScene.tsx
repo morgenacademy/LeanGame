@@ -142,7 +142,7 @@ function PlayerBuildPanel({ g, drag }: { g: GameState; drag: Drag | null }) {
               </div>
               <div className="scene-build-hint">
                 {remainingParts > 0
-                  ? `${remainingParts} onderdeel${remainingParts === 1 ? '' : 'en'} over in deze set`
+                  ? `${remainingParts} ${remainingParts === 1 ? 'onderdeel' : 'onderdelen'} over in deze set`
                   : 'huis klaar, naar de markt'}
               </div>
             </div>
@@ -344,10 +344,11 @@ function buildStaticScene(
 
   createConveyor(root, 0.05, 1.24, 15.9, 0.72, beltTexture, beltMats);
 
-  STATION_LAYOUT.slice(0, 3).forEach((s) => {
+  STATION_LAYOUT.slice(0, 3).forEach((s, index) => {
     createPlatform(root, s.x, s.z, 2.35, 2.05, false);
     createSign(root, s.x, 0.2, s.label, s.icon);
     createFeeder(root, s.x, 0.95);
+    createStationTool(root, s.x, index);
   });
 
   createPlatform(root, STATION_LAYOUT[3].x, STATION_LAYOUT[3].z, 2.85, 2.65, true);
@@ -396,22 +397,27 @@ function enqueueProcessTransfers(
   }
 
   const builtDelta = next.built.length - prev.built.length;
+  const justBuiltIds = new Set<number>();
   for (let n = 0; n < builtDelta; n++) {
     const house = next.built[next.built.length - 1 - n];
     if (house) {
+      justBuiltIds.add(house.id);
       addTransfer(root, transfers, createHouseMesh(house.color, 0.78), segmentStart(3), segmentEnd(3), now, 1.05);
-      if (house.sold) {
-        addTransfer(
-          root,
-          transfers,
-          createPickupTruck(house.color),
-          marketPickupStart(),
-          marketPickupEnd(),
-          now + 0.95,
-          1.35
-        );
-      }
     }
+  }
+
+  const prevSoldIds = new Set(prev.built.filter((house) => house.sold).map((house) => house.id));
+  for (const house of next.built) {
+    if (!house.sold || prevSoldIds.has(house.id)) continue;
+    addTransfer(
+      root,
+      transfers,
+      createPickupTruck(house.color),
+      marketPickupStart(),
+      marketPickupEnd(),
+      now + (justBuiltIds.has(house.id) ? 0.95 : 0.15),
+      1.35
+    );
   }
 }
 
@@ -569,6 +575,50 @@ function createFeeder(root: THREE.Group, x: number, z: number) {
   addEdges(tray, 0xf4f8ff);
 }
 
+function createStationTool(root: THREE.Group, x: number, index: number) {
+  const group = new THREE.Group();
+  group.position.set(x - 0.2, 0.57, -0.18);
+  root.add(group);
+
+  if (index === 0) {
+    COLORS.forEach((color, i) => {
+      const lane = new THREE.Mesh(
+        new THREE.BoxGeometry(0.16, 0.035, 0.7),
+        new THREE.MeshBasicMaterial({ color: COLOR_HEX[color], transparent: true, opacity: 0.88 })
+      );
+      lane.position.set((i - 1.5) * 0.2, 0, 0);
+      group.add(lane);
+    });
+    return;
+  }
+
+  if (index === 1) {
+    const railMat = new THREE.MeshBasicMaterial({ color: 0xf4f8ff, transparent: true, opacity: 0.86 });
+    const ruler = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.035, 0.08), railMat);
+    group.add(ruler);
+    for (let i = 0; i < 6; i++) {
+      const tick = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.045, i % 2 === 0 ? 0.22 : 0.15), railMat);
+      tick.position.set(-0.42 + i * 0.17, 0.02, 0.1);
+      group.add(tick);
+    }
+    const jawA = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.38), railMat);
+    jawA.position.set(-0.24, 0.04, 0.12);
+    const jawB = jawA.clone();
+    jawB.position.x = 0.3;
+    group.add(jawA, jawB);
+    return;
+  }
+
+  const slotMat = new THREE.MeshBasicMaterial({ color: 0xd8fe56, transparent: true, opacity: 0.84 });
+  for (let i = 0; i < 4; i++) {
+    const row = Math.floor(i / 2);
+    const col = i % 2;
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.035, 0.22), slotMat);
+    frame.position.set((col - 0.5) * 0.34, 0, (row - 0.5) * 0.3);
+    group.add(frame);
+  }
+}
+
 function createPlayerDeck(root: THREE.Group, robot: THREE.Group, x: number) {
   robot.position.set(x + 0.62, 0.74, -0.64);
   root.add(robot);
@@ -720,6 +770,18 @@ function createMarketStall(root: THREE.Group, x: number) {
     stripe.position.x = (i - 2.5) * 0.24;
     canopy.add(stripe);
   }
+
+  const bay = new THREE.Mesh(
+    new THREE.BoxGeometry(1.38, 0.035, 0.78),
+    new THREE.MeshStandardMaterial({ color: 0x050708, roughness: 0.5, metalness: 0.22 })
+  );
+  bay.position.set(x + 0.5, 0.49, -0.5);
+  root.add(bay);
+  addEdges(bay, 0xd8fe56);
+
+  const truck = createDeliveryTruck();
+  truck.position.set(x + 0.55, 0.52, -0.5);
+  root.add(truck);
 }
 
 function createSign(root: THREE.Group, x: number, z: number, label: string, icon: string) {
@@ -763,6 +825,9 @@ function rebuildDynamic(dynamic: THREE.Group, g: GameState, inventoryHitMeshes: 
   addRawCluster(dynamic, STATION_LAYOUT[0].x - 0.18, 0.06, rawItems(rawLeft), 12, 4);
   addRawCluster(dynamic, STATION_LAYOUT[1].x - 0.1, -0.06, g.stations[1].buffer, 10, 3);
   addSizedCluster(dynamic, STATION_LAYOUT[2].x - 0.08, 0.05, g.stations[2].buffer, 8, 2);
+  g.stations.slice(0, 3).forEach((station, index) => {
+    if (station.justActed) addStationPulse(dynamic, index);
+  });
   addPlayerInventory(dynamic, g, inventoryHitMeshes);
   addBuildCue(dynamic, g);
 
@@ -817,6 +882,27 @@ function addPlayerInventory(group: THREE.Group, g: GameState, inventoryHitMeshes
   hit.userData.color = active.color;
   group.add(hit);
   inventoryHitMeshes.push(hit);
+}
+
+function addStationPulse(group: THREE.Group, index: number) {
+  const station = STATION_LAYOUT[index];
+  const pulse = new THREE.Group();
+  pulse.position.set(station.x - 0.2, 0.82, -0.18);
+  group.add(pulse);
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.48, 0.018, 8, 42),
+    new THREE.MeshBasicMaterial({ color: 0xd8fe56, transparent: true, opacity: 0.78 })
+  );
+  ring.rotation.x = Math.PI / 2;
+  pulse.add(ring);
+
+  const beam = new THREE.Mesh(
+    new THREE.BoxGeometry(0.78, 0.035, 0.035),
+    new THREE.MeshBasicMaterial({ color: 0xf4f8ff, transparent: true, opacity: 0.75 })
+  );
+  beam.rotation.y = index === 1 ? -0.45 : 0.45;
+  pulse.add(beam);
 }
 
 function addBuildCue(group: THREE.Group, g: GameState) {
@@ -931,7 +1017,49 @@ function addHouseCluster(
   });
 }
 
-function createSetPack(color: Color, scale = 1) {
+function addMarketDemand(group: THREE.Group, g: GameState) {
+  const bubble = createDemandBubble(g.demandRevealed ? g.demandColor : null);
+  bubble.position.set(STATION_LAYOUT[4].x + 0.55, 1.62, -0.58);
+  bubble.rotation.x = -0.08;
+  group.add(bubble);
+
+  if (g.demandRevealed && g.demandColor) {
+    const sample = createHouseMesh(g.demandColor, 0.36);
+    sample.position.set(STATION_LAYOUT[4].x + 0.52, 0.92, -0.58);
+    group.add(sample);
+  }
+}
+
+function createRawPiece(scale = 1) {
+  const group = new THREE.Group();
+  const base = createBoxMesh(0x6d6382, 0.32 * scale, 0.24 * scale, 0.28 * scale);
+  base.rotation.y = 0.2;
+  group.add(base);
+
+  const chip = createBoxMesh(0x988faa, 0.2 * scale, 0.16 * scale, 0.18 * scale);
+  chip.position.set(0.11 * scale, 0.16 * scale, -0.05 * scale);
+  chip.rotation.z = -0.18;
+  group.add(chip);
+
+  return group;
+}
+
+function createSizedPiece(scale = 1) {
+  const group = new THREE.Group();
+  const block = createCubeMesh(0x9a94aa, 0.29 * scale);
+  group.add(block);
+
+  const railMat = new THREE.MeshBasicMaterial({ color: 0xf4f8ff, transparent: true, opacity: 0.88 });
+  for (const z of [-0.13, 0.13]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.34 * scale, 0.025 * scale, 0.025 * scale), railMat);
+    rail.position.set(0, 0.18 * scale, z * scale);
+    group.add(rail);
+  }
+
+  return group;
+}
+
+function createSetPack(color: Color, scale = 1, count = 4) {
   const group = new THREE.Group();
   const size = 0.25 * scale;
   const spacing = 0.28 * scale;
@@ -942,13 +1070,59 @@ function createSetPack(color: Color, scale = 1) {
     [spacing / 2, 0, spacing / 2],
   ] as const;
 
-  positions.forEach(([x, y, z]) => {
+  positions.slice(0, count).forEach(([x, y, z]) => {
     const cube = createCubeMesh(COLOR_HEX[color], size);
     cube.position.set(x, y, z);
     group.add(cube);
   });
 
   return group;
+}
+
+function createPickupTruck(color: Color) {
+  const group = createDeliveryTruck();
+  const house = createHouseMesh(color, 0.42);
+  house.position.set(0.18, 0.32, 0);
+  group.add(house);
+  return group;
+}
+
+function createDeliveryTruck() {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xd8fe56, roughness: 0.38, metalness: 0.18 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x111417, roughness: 0.5, metalness: 0.2 });
+  const cabMat = new THREE.MeshStandardMaterial({ color: 0xf4f8ff, roughness: 0.34, metalness: 0.12 });
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.2, 0.36), bodyMat);
+  body.position.y = 0.18;
+  group.add(body);
+  addEdges(body, 0x101418);
+
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.24, 0.32), cabMat);
+  cab.position.set(-0.34, 0.28, 0);
+  group.add(cab);
+  addEdges(cab, 0x101418);
+
+  for (const x of [-0.28, 0.28]) {
+    for (const z of [-0.2, 0.2]) {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.055, 14), darkMat);
+      wheel.position.set(x, 0.06, z);
+      wheel.rotation.x = Math.PI / 2;
+      group.add(wheel);
+    }
+  }
+
+  group.rotation.y = -0.18;
+  return group;
+}
+
+function createDemandBubble(color: Color | null) {
+  const tex = makeDemandTexture(color);
+  const bubble = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.15, 0.74),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true })
+  );
+  return bubble;
 }
 
 function createCubeMesh(color: string | number, size: number) {
@@ -967,6 +1141,18 @@ function createCubeMesh(color: string | number, size: number) {
   addEdges(cube, 0x101418);
   addStuds(cube, c, size);
   return cube;
+}
+
+function createBoxMesh(color: string | number, width: number, height: number, depth: number) {
+  const c = new THREE.Color(color);
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, depth),
+    new THREE.MeshStandardMaterial({ color: c, roughness: 0.46, metalness: 0.08 })
+  );
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  addEdges(mesh, 0x101418);
+  return mesh;
 }
 
 function addStuds(cube: THREE.Mesh, color: THREE.Color, size: number) {
@@ -1041,6 +1227,87 @@ function makeSignTexture(label: string, icon: string) {
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
+}
+
+function makeDemandTexture(color: Color | null) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 330;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = 'rgba(250,252,255,0.96)';
+  roundedRect(ctx, 52, 28, 408, 226, 42);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(250, 252);
+  ctx.lineTo(286, 252);
+  ctx.lineTo(252, 300);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#111417';
+  ctx.textAlign = 'center';
+  ctx.font = '900 34px system-ui, sans-serif';
+  ctx.fillText('VRAAG', 256, 76);
+
+  if (color) {
+    const houseColor = COLOR_HEX[color];
+    ctx.fillStyle = houseColor;
+    ctx.fillRect(202, 146, 108, 68);
+    ctx.fillStyle = shadeColor(houseColor, -28);
+    ctx.beginPath();
+    ctx.moveTo(188, 150);
+    ctx.lineTo(256, 96);
+    ctx.lineTo(324, 150);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.fillRect(246, 178, 22, 36);
+    ctx.fillStyle = '#111417';
+    ctx.font = '900 42px system-ui, sans-serif';
+    ctx.fillText(COLOR_LABEL[color].toUpperCase(), 256, 126);
+  } else {
+    ctx.fillStyle = '#111417';
+    ctx.font = '900 112px system-ui, sans-serif';
+    ctx.fillText('?', 256, 188);
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function shadeColor(hex: string, amount: number) {
+  const color = new THREE.Color(hex);
+  return `#${[color.r, color.g, color.b]
+    .map((channel) =>
+      Math.max(0, Math.min(255, Math.round(channel * 255 + amount)))
+        .toString(16)
+        .padStart(2, '0')
+    )
+    .join('')}`;
 }
 
 function makeBeltTexture() {

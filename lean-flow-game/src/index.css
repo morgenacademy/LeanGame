@@ -919,7 +919,7 @@ kbd {
   letter-spacing: 0.04em;
 }
 
-/* Echte assemblage: bouwtekening (drop) + bak (drag-bron), afstand ertussen = motion */
+/* Echte assemblage: bouwvakken (drop) + voorraad (drag-bron), afstand ertussen = motion */
 .assembly-label {
   display: flex;
   align-items: center;
@@ -1087,6 +1087,7 @@ kbd {
   position: fixed;
   inset: 0;
   z-index: 20;
+  pointer-events: none;
 }
 .tour-spot {
   position: fixed;
@@ -1098,6 +1099,7 @@ kbd {
 }
 .tour-card {
   position: fixed;
+  pointer-events: auto;
   transform: translateX(-50%);
   width: min(380px, calc(100vw - 32px));
   background: var(--card-bg-strong);

@@ -89,7 +89,9 @@ function tryProcess(s: GameState, i: number, cfg: RoundConfig): boolean {
     if (wip != null && next.length >= wip) return false;
     next.push({ id: s.nextUnitId++, color: null, startedAtMs: s.elapsedMs });
     s.rawReleased++;
-    s.metrics.bricksConsumed += BRICKS_PER_HOUSE; // kosten ontstaan zodra materiaal wordt vrijgegeven
+    // Eén zichtbaar onderdeel is een kwart huis-set; economisch telt het als
+    // 3 echte steentjes wanneer BRICKS_PER_HOUSE = 12 en STUDS_PER_HOUSE = 4.
+    s.metrics.bricksConsumed += BRICKS_PER_HOUSE / STUDS_PER_HOUSE;
     return true;
   }
 
@@ -102,12 +104,15 @@ function tryProcess(s: GameState, i: number, cfg: RoundConfig): boolean {
     return true;
   }
 
-  // i === 2: set samenstellen + kleur toekennen.
+  // i === 2: set samenstellen + kleur toekennen. Een set bestaat uit 4
+  // onderdelen; pas als die voorraad er ligt komt er één set uit.
   const inp = s.stations[2].buffer;
-  if (inp.length === 0) return false;
+  if (inp.length < STUDS_PER_HOUSE) return false;
   const next = s.stations[3].buffer;
   if (wip != null && next.length >= wip) return false;
-  const u = inp.shift()!;
+  const parts = inp.splice(0, STUDS_PER_HOUSE);
+  const first = parts[0]!;
+  const u = { id: first.id, color: first.color, startedAtMs: first.startedAtMs };
   // Pull: maak wat de klant vraagt. Push: gok een kleur (geen vraag bekend).
   u.color = cfg.mode === 'pull' ? s.demandColor ?? rand(COLORS) : rand(COLORS);
   next.push(u);
@@ -178,7 +183,7 @@ export function tick(s: GameState, dt: number): void {
 }
 
 /**
- * Speler sleept een steen naar de bouwtekening. Alleen de juiste kleur telt;
+ * Speler sleept een onderdeel naar de bouwvakken. Alleen de juiste kleur telt;
  * een verkeerde kleur is verspilde beweging (rework). Bij de laatste juiste
  * steen gaat het huis naar de markt.
  */
@@ -199,7 +204,7 @@ export function placeBrick(s: GameState, color: Color): void {
 
 /**
  * Legt vast één set in handen van de bouwer, zodat tijdens de walkthrough de
- * echte bouw-UI (bouwtekening + bak) al zichtbaar is. Kosten worden gewoon geteld.
+ * echte bouw-UI (voorraad + bouwvakken) al zichtbaar is. Kosten worden gewoon geteld.
  */
 export function seedHolding(s: GameState): void {
   if (s.holding) return;

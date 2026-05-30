@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { makeRoundState, tick, placeBrick, seedHolding } from './engine';
+import { makeRoundState, tick, placeBrick } from './engine';
 import { ROUNDS, TICK_MS } from './config';
 import type { Color, GameState } from './types';
 
@@ -68,7 +68,6 @@ export const useGame = create<Store>((set, get) => {
         const g = clone(state.g);
         g.phase = 'playing';
         g.running = false;
-        seedHolding(g); // bouw-UI alvast zichtbaar
         return { g, tourActive: true };
       });
     },
