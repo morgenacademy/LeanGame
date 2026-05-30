@@ -467,8 +467,19 @@ kbd {
   text-align: center;
   transition: var(--transition);
 }
+/* AI-werkplekken krijgen een machine-console-skin (9-slice border-image) */
+.station-body.machine {
+  border: 14px solid transparent;
+  border-image: var(--machine) 20 fill stretch;
+  background: none;
+  padding: 0.7rem 0.6rem;
+}
 .station-body.busy {
   border-color: rgba(216, 254, 86, 0.3);
+}
+.station-body.machine.busy {
+  border-color: transparent; /* frame bepaalt de rand; busy-glow via box-shadow */
+  box-shadow: inset 0 0 0 1px rgba(216, 254, 86, 0.25), 0 0 16px rgba(216, 254, 86, 0.12);
 }
 .station-body.idle {
   opacity: 0.72;
@@ -684,21 +695,31 @@ kbd {
 /* ============================================================
    Debrief overlay
    ============================================================ */
+/* Tijdens de debrief schuift de fabriek naar boven zodat het dock 'm niet bedekt. */
+.with-debrief-dock .board {
+  padding-bottom: 58vh;
+}
+
+/* Debrief dockt onderaan: de fabriek blijft zichtbaar erboven, zodat je je
+   eindstaat (WIP, verkocht, winst) kunt zien terwijl je de vraag beantwoordt. */
 .overlay {
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 10;
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  background: rgba(8, 5, 18, 0.72);
-  backdrop-filter: blur(6px);
+  padding: 1rem 1.5rem 1.5rem;
+  /* zachte gradient zodat de overgang naar de fabriek erboven vloeiend is */
+  background: linear-gradient(to top, rgba(8, 5, 18, 0.96) 60%, rgba(8, 5, 18, 0));
 }
 .debrief {
-  max-width: 560px;
+  max-width: 640px;
   width: 100%;
-  padding: 2.2rem;
+  padding: 1.6rem 2rem;
+  max-height: 56vh;
+  overflow-y: auto;
 }
 .debrief-head {
   display: flex;

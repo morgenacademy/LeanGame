@@ -23,7 +23,7 @@ export function Station({ name, short, queue, blocked, ai, progress, icon }: Sta
         <span className="queue-count">{queue.length}</span>
         <Pile items={queue} />
       </div>
-      <div className={`station-body ${blocked ? 'idle' : 'busy'}`}>
+      <div className={`station-body machine ${blocked ? 'idle' : 'busy'}`}>
         {icon && <div className="station-icon">{icon}</div>}
         <div className="station-short">{short}</div>
         <div className="station-name">{name}</div>

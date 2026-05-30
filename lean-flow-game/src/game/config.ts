@@ -10,6 +10,12 @@ export const HOUSE_PRICE = 25;
 /** Aantal klikken om een huis te bouwen (de hands-on micro-taak). */
 export const STUDS_PER_HOUSE = 4;
 
+/** Het afgebouwde huis (met dak) blijft dit even staan vóór het naar de markt schuift. */
+export const HOUSE_HOLD_MS = 650;
+
+/** Pull: interval waarop de klantvraag van kleur wisselt. */
+export const DEMAND_SWITCH_MS = 14000;
+
 /** Tick-resolutie van de simulatie. */
 export const TICK_MS = 100;
 
@@ -63,15 +69,15 @@ export const ROUNDS: RoundConfig[] = [
   {
     mode: 'pull',
     durationMs: 60000,
-    wipLimit: 2,
+    wipLimit: 1,
     demandKnownAtStart: true,
-    stationCooldownMs: [1100, 1100, 1100],
+    stationCooldownMs: [1700, 1700, 1700],
     title: 'Ronde 2',
     subtitle: 'Op signaal van de klant',
     intro: [
-      'Nieuwe regel: een station maakt pas iets als er stroomafwaarts ruimte is (WIP-limiet).',
-      'De vraag-kleur van de klant zie je nu vanaf het begin.',
-      'Bouw alleen wat de klant vraagt. Soms sta je even stil, dat mag.',
+      'Nieuwe regel: een station maakt pas iets als er stroomafwaarts ruimte is (WIP-limiet 1).',
+      'De vraag-kleur van de klant zie je nu vanaf het begin (en wisselt soms).',
+      'Bouw alleen wat de klant vraagt. Vaak sta je even stil, dat mag, het werk stroomt.',
     ],
   },
 ];

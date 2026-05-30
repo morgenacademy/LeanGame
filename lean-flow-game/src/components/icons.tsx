@@ -16,6 +16,7 @@ const tex = (name: string) => `${import.meta.env.BASE_URL}textures/${name}`;
 const beltTileUrl = tex('belt-tile.svg');
 const floorTileUrl = tex('floor-tile.svg');
 const hazardStripUrl = tex('hazard-strip.svg');
+const machineFrameUrl = tex('machine-frame.svg');
 
 export {
   BrickSvg,
@@ -30,4 +31,5 @@ export {
   beltTileUrl,
   floorTileUrl,
   hazardStripUrl,
+  machineFrameUrl,
 };

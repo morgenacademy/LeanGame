@@ -18,6 +18,7 @@ import {
   beltTileUrl,
   floorTileUrl,
   hazardStripUrl,
+  machineFrameUrl,
 } from './icons';
 
 export function GameBoard() {
@@ -39,7 +40,7 @@ export function GameBoard() {
     <div className="board">
       <Hud />
 
-      <div className="line">
+      <div className="line" style={{ ['--machine' as string]: `url(${machineFrameUrl})` }}>
         <div className="factory-zone" style={{ backgroundImage: `url(${floorTileUrl})` }}>
           <div className="hazard-top" style={{ backgroundImage: `url(${hazardStripUrl})` }} />
           <Station

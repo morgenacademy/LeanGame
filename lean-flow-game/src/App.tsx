@@ -16,10 +16,10 @@ export default function App() {
   if (phase === 'finished') return <FinalScreen />;
 
   return (
-    <>
+    <div className={phase === 'debrief' ? 'with-debrief-dock' : undefined}>
       <GameBoard />
       {phase === 'debrief' && <DebriefOverlay />}
       {tourActive && <Tour />}
-    </>
+    </div>
   );
 }

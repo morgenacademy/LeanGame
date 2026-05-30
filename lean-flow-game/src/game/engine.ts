@@ -10,6 +10,8 @@ import {
   STUDS_PER_HOUSE,
   RAW_SUPPLY,
   PLAYER_STATION_INDEX,
+  HOUSE_HOLD_MS,
+  DEMAND_SWITCH_MS,
   type RoundConfig,
 } from './config';
 import type { Color, GameState, RoundMetrics, StationState } from './types';
@@ -66,6 +68,8 @@ export function makeRoundState(roundIndex: number, prevResults: RoundMetrics[] =
     placedBricks: 0,
     studsPerHouse: STUDS_PER_HOUSE,
     shake: 0,
+    houseCompleteAtMs: null,
+    nextDemandSwitchMs: 12000,
     nextUnitId: 1,
     nextHouseId: 1,
     rawReleased: 0,
@@ -135,8 +139,30 @@ export function tick(s: GameState, dt: number): void {
     }
   }
 
-  // Auto-grab: zodra de bouwer vrij is en er een set klaarligt, pakt hij die op.
-  if (!s.holding && s.stations[3].buffer.length > 0) {
+  // Dak-moment: een compleet huis blijft heel even staan (met dak) en schuift
+  // daarna pas naar de markt. Pas dán pakt de bouwer de volgende set.
+  if (s.houseCompleteAtMs != null && s.elapsedMs - s.houseCompleteAtMs >= HOUSE_HOLD_MS) {
+    shipHouse(s);
+  }
+
+  // Pull: de klant verandert af en toe van wens. In kanban maak je wat NU gevraagd
+  // wordt, dus herkleuren we de sets die al onderweg zijn naar de nieuwe wens
+  // (anders bouw je iets dat de klant niet meer wil = alsnog verspilling).
+  if (cfg.mode === 'pull' && s.elapsedMs >= s.nextDemandSwitchMs) {
+    let next = rand(COLORS);
+    while (next === s.demandColor) next = rand(COLORS);
+    s.demandColor = next;
+    s.nextDemandSwitchMs = s.elapsedMs + DEMAND_SWITCH_MS;
+    for (const u of s.stations[2].buffer) if (u.color) u.color = next;
+    for (const u of s.stations[3].buffer) u.color = next;
+    // Ook het huis-in-aanbouw volgt de nieuwe wens (compleet+wachtend huis niet:
+    // dat is al af en wordt zo geleverd).
+    if (s.holding && s.houseCompleteAtMs == null) s.holding.color = next;
+  }
+
+  // Auto-grab: zodra de bouwer vrij is (en geen huis in de dak-pauze) pakt hij de
+  // volgende set, als die klaarligt.
+  if (!s.holding && s.houseCompleteAtMs == null && s.stations[3].buffer.length > 0) {
     s.holding = s.stations[3].buffer.shift()!;
     s.placedBricks = 0;
   }
@@ -159,9 +185,12 @@ export function tick(s: GameState, dt: number): void {
 export function placeBrick(s: GameState, color: Color): void {
   if (s.phase !== 'playing' || !s.running) return;
   if (!s.holding) return;
+  if (s.houseCompleteAtMs != null) return; // huis is af en wacht op de markt
   if (color === s.holding.color) {
     s.placedBricks++;
-    if (s.placedBricks >= s.studsPerHouse) shipHouse(s);
+    // Laatste steen: huis is compleet (dak erop). Het blijft even staan en schuift
+    // dan via de tick naar de markt (shipHouse).
+    if (s.placedBricks >= s.studsPerHouse) s.houseCompleteAtMs = s.elapsedMs;
   } else {
     s.metrics.misdrops++;
     s.shake++;
@@ -194,10 +223,8 @@ function shipHouse(s: GameState): void {
   }
   s.holding = null;
   s.placedBricks = 0;
-  // Meteen de volgende set pakken zodat de bouwtekening niet flikkert tussen huizen.
-  if (s.stations[3].buffer.length > 0) {
-    s.holding = s.stations[3].buffer.shift()!;
-  }
+  s.houseCompleteAtMs = null;
+  // Volgende set wordt door de tick (auto-grab) opgepakt.
 }
 
 function endRound(s: GameState): void {

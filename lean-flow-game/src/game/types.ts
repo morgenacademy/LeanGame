@@ -79,6 +79,11 @@ export interface GameState {
   placedBricks: number;
   studsPerHouse: number;
   shake: number; // telt op bij een verkeerde sleep (voor schud-feedback in de UI)
+  /** Tijdstip (elapsedMs) waarop het huis compleet werd; toont het dak even vóór
+   *  het naar de markt schuift. null = niet compleet / al verscheept. */
+  houseCompleteAtMs: number | null;
+  /** Volgende moment (elapsedMs) waarop de klantvraag wisselt (alleen pull). */
+  nextDemandSwitchMs: number;
 
   // Tellers voor unieke id's
   nextUnitId: number;
