@@ -1,5 +1,5 @@
 // Socratische debrief: de game vraagt eerst, benoemt het principe pas na het antwoord.
-// "Discovery, not persuasion" — geen fout antwoord, het gaat om de reflectie.
+// "Discovery, not persuasion". Geen fout antwoord, het gaat om de reflectie.
 
 import { euro, secs } from './colors';
 import type { GameState } from './types';
@@ -29,8 +29,8 @@ export function buildDebrief(g: GameState): DebriefScript {
           question: 'Je bouwde volop. Hoeveel huizen kocht de klant uiteindelijk?',
           hint: 'Je kon dit niet weten: pas aan het eind bleek wélke kleur de klant wilde. Dat is juist het punt van push.',
           options: ['Veel gebouwd, weinig verkocht', 'Ongeveer gelijk', 'Weet ik niet'],
-          reveal: `Je bouwde ${m.housesBuilt} huizen, de klant kocht er ${m.housesSold}. De andere ${m.housesUnsold} liggen onverkocht — gemaakt op voorraad, zonder te weten wat de klant wilde.`,
-          principle: 'Overproductie — de hoofdverspilling',
+          reveal: `Je bouwde ${m.housesBuilt} huizen, de klant kocht er ${m.housesSold}. De andere ${m.housesUnsold} liggen onverkocht, gemaakt op voorraad zonder te weten wat de klant wilde.`,
+          principle: 'Overproductie, de hoofdverspilling',
         },
         {
           question: 'Waar stapelde het werk zich op?',
@@ -41,7 +41,7 @@ export function buildDebrief(g: GameState): DebriefScript {
         {
           question: 'Hoe voelde het tempo?',
           options: ['Gejaagd, chaotisch', 'Druk maar oké', 'Te rustig'],
-          reveal: `Iedereen werkte zo hard mogelijk en tóch: ${euro(m.profit)}. Hard werken is niet hetzelfde als waarde leveren. Dit heet push — produceren op planning in plaats van op vraag.`,
+          reveal: `Iedereen werkte zo hard mogelijk en tóch: ${euro(m.profit)}. Hard werken is niet hetzelfde als waarde leveren. Dit heet push: produceren op planning in plaats van op vraag.`,
           principle: 'Push duwt werk de lijn in, of de klant het nu wil of niet',
         },
       ],
@@ -57,7 +57,7 @@ export function buildDebrief(g: GameState): DebriefScript {
         question: 'Stond je deze ronde wel eens stil?',
         hint: 'Met lege handen wachten op materiaal.',
         options: ['Ja, regelmatig', 'Soms even', 'Nauwelijks'],
-        reveal: `Stilstaan voelt verkeerd, maar het werk blééf stromen. Niet iedereen hoeft 100% bezig te zijn — het gaat erom dat het werk doorstroomt.`,
+        reveal: `Stilstaan voelt verkeerd, maar het werk blééf stromen. Niet iedereen hoeft 100% bezig te zijn, het gaat erom dat het werk doorstroomt.`,
         principle: 'Flow-efficiëntie boven resource-efficiëntie',
       },
       {
@@ -71,7 +71,7 @@ export function buildDebrief(g: GameState): DebriefScript {
         hint: r1 ? `Ronde 1: ${euro(r1.profit)} · Ronde 2: ${euro(m.profit)}` : undefined,
         options: ['Wij werkten slimmer', 'De spelregels veranderden', 'Geluk'],
         reveal: r1
-          ? `Ronde 1: ${euro(r1.profit)}. Ronde 2: ${euro(m.profit)}. Zelfde mensen, zelfde stenen — alleen andere spelregels. Dáár zit lean: niet harder werken, maar het systeem anders inrichten.`
+          ? `Ronde 1: ${euro(r1.profit)}. Ronde 2: ${euro(m.profit)}. Zelfde mensen, zelfde stenen, alleen andere spelregels. Dáár zit lean: niet harder werken, maar het systeem anders inrichten.`
           : `Niet harder werken, maar het systeem anders inrichten. Dáár zit lean.`,
         principle: 'Principes boven praktijken',
       },

@@ -1,13 +1,13 @@
 import type { Color, RoundMode } from './types';
 
-// --- Economie (illustratief: stenen/huis × $1 = kostprijs, huis = $25) ---
+// Economie (illustratief: stenen/huis x $1 = kostprijs, huis = $25).
 // Marge $13/huis: pull verkoopt vrijwel alles -> winst; push koopt RAW_SUPPLY sets
 // in ongeacht de vraag -> grote overproductie-kost -> verlies. Flip is robuust.
 export const COLORS: Color[] = ['red', 'blue', 'yellow', 'green'];
 export const BRICKS_PER_HOUSE = 12;
 export const HOUSE_PRICE = 25;
 
-/** Aantal klikken om één huis te bouwen (de hands-on micro-taak). */
+/** Aantal klikken om een huis te bouwen (de hands-on micro-taak). */
 export const STUDS_PER_HOUSE = 4;
 
 /** Tick-resolutie van de simulatie. */
@@ -71,7 +71,7 @@ export const ROUNDS: RoundConfig[] = [
     intro: [
       'Nieuwe regel: een station maakt pas iets als er stroomafwaarts ruimte is (WIP-limiet).',
       'De vraag-kleur van de klant zie je nu vanaf het begin.',
-      'Bouw alleen wat de klant vraagt. Soms sta je even stil — dat mag.',
+      'Bouw alleen wat de klant vraagt. Soms sta je even stil, dat mag.',
     ],
   },
 ];

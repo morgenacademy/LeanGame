@@ -20,6 +20,6 @@ export function euro(n: number): string {
 }
 
 export function secs(ms: number | null): string {
-  if (ms == null) return '—';
+  if (ms == null) return 'n.v.t.';
   return `${(ms / 1000).toFixed(1)}s`;
 }

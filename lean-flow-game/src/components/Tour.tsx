@@ -15,8 +15,8 @@ const qa = (s: string) => document.querySelectorAll(s);
 const LATER_STEPS: Step[] = [
   {
     target: () => q('.demand-bubble') ?? q('.market'),
-    title: 'Nieuwe ronde — kijk even rond',
-    text: 'De klant zegt nu vooraf wat hij wil: zie de vraag bij de markt. Maak alléén dat. Soms sta je even stil — dat mag. Klaar?',
+    title: 'Nieuwe ronde, kijk even rond',
+    text: 'De klant zegt nu vooraf wat hij wil: zie de vraag bij de markt. Maak alléén dat. Soms sta je even stil, dat mag. Klaar?',
   },
 ];
 
@@ -24,7 +24,7 @@ const ROUND1_STEPS: Step[] = [
   {
     target: () => q('.line'),
     title: 'De fabriek',
-    text: 'Vier werkplekken op een rij. Werk stroomt van links naar rechts — van losse stenen tot een afgebouwd huis.',
+    text: 'Vier werkplekken op een rij. Werk stroomt van links naar rechts, van losse stenen tot een afgebouwd huis.',
   },
   {
     target: () => [...qa('.station')].slice(0, 3),
@@ -33,13 +33,13 @@ const ROUND1_STEPS: Step[] = [
   },
   {
     target: () => q('.player-station'),
-    title: 'Dit ben JIJ — de bouwer',
+    title: 'Dit ben JIJ, de bouwer',
     text: 'Jij bent de laatste werkplek. Je bouwt het huis: sleep de juiste kleur uit de bak omhoog naar de bouwtekening.',
   },
   {
     target: () => q('.market'),
-    title: 'De klant — buiten de fabriek',
-    text: 'Hier koopt de klant. In deze ronde hoor je pas aan het eind wélke kleur hij wil. Je bouwt dus blind — dat is expres.',
+    title: 'De klant (buiten de fabriek)',
+    text: 'Hier koopt de klant. In deze ronde hoor je pas aan het eind wélke kleur hij wil. Je bouwt dus blind, dat is expres.',
   },
   {
     target: () => q('.hud-stats'),
@@ -49,7 +49,7 @@ const ROUND1_STEPS: Step[] = [
   {
     target: () => q('.player-station'),
     title: 'Klaar?',
-    text: 'Bouw zoveel je kunt. Let op: kun je het bijbenen — en bouw je het juiste? Veel succes.',
+    text: 'Bouw zoveel je kunt. Let op: kun je het bijbenen, en bouw je het juiste? Veel succes.',
   },
 ];
 
