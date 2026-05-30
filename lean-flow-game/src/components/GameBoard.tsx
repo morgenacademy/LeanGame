@@ -7,6 +7,7 @@ import { MoneyFloats } from './MoneyFloats';
 import { RAW_SUPPLY, ROUNDS } from '../game/config';
 import { COLOR_HEX } from '../game/colors';
 import type { Color } from '../game/types';
+import { SortColorSvg, SortSizeSvg, SetSvg, HouseSvg, CustomerSvg } from './icons';
 
 export function GameBoard() {
   const g = useGame((s) => s.g);
@@ -32,6 +33,7 @@ export function GameBoard() {
           queue={rawItems}
           blocked={g.stations[0].blocked}
           progress={prog(0)}
+          icon={<SortColorSvg width={24} height={24} />}
           ai
         />
         <Arrow />
@@ -41,6 +43,7 @@ export function GameBoard() {
           queue={g.stations[1].buffer}
           blocked={g.stations[1].blocked}
           progress={prog(1)}
+          icon={<SortSizeSvg width={24} height={24} />}
           ai
         />
         <Arrow />
@@ -50,6 +53,7 @@ export function GameBoard() {
           queue={g.stations[2].buffer}
           blocked={g.stations[2].blocked}
           progress={prog(2)}
+          icon={<SetSvg width={24} height={24} />}
           ai
         />
         <Arrow />
@@ -94,6 +98,9 @@ function Market() {
         ))}
       </div>
       <div className="station-body">
+        <div className="station-icon">
+          <CustomerSvg width={30} height={30} />
+        </div>
         <div className="station-short">Markt</div>
         <div className="station-name">
           De klant <span className="market-sub">buiten de fabriek</span>
@@ -110,8 +117,7 @@ function House({ color, sold, revealed }: { color: Color; sold: boolean; reveale
   const dim = revealed && !sold;
   return (
     <span className={`house ${dim ? 'unsold' : ''}`} title={revealed ? (sold ? 'verkocht' : 'onverkocht') : ''}>
-      <span className="house-roof" style={{ borderBottomColor: COLOR_HEX[color] }} />
-      <span className="house-body" style={{ background: COLOR_HEX[color] }} />
+      <HouseSvg width={18} height={22} style={{ color: COLOR_HEX[color], display: 'block' }} />
       {dim && <span className="house-x">✕</span>}
     </span>
   );

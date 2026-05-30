@@ -4,6 +4,7 @@ import { Brick, Pile } from './Brick';
 import { COLORS } from '../game/config';
 import { COLOR_HEX, COLOR_LABEL } from '../game/colors';
 import type { Color } from '../game/types';
+import { BrickSvg, BuilderSvg } from './icons';
 
 interface Drag {
   color: Color;
@@ -61,6 +62,9 @@ export function BuildStation() {
       <div className="build-body">
         <div className="build-head">
           <div className="station-short">
+            <span className="head-icon">
+              <BuilderSvg width={18} height={18} />
+            </span>
             Bouw <span className="you-badge">JIJ</span>
           </div>
         </div>
@@ -93,15 +97,14 @@ export function BuildStation() {
                   <button
                     key={c}
                     className="tray-brick"
-                    style={{ background: COLOR_HEX[c] }}
+                    style={{ color: COLOR_HEX[c] }}
                     aria-label={COLOR_LABEL[c]}
                     onPointerDown={(e) => {
                       e.preventDefault();
                       setDrag({ color: c, x: e.clientX, y: e.clientY });
                     }}
                   >
-                    <span className="stud" />
-                    <span className="stud" />
+                    <BrickSvg width={40} height={24} style={{ display: 'block', pointerEvents: 'none' }} />
                   </button>
                 ))}
               </div>
@@ -118,12 +121,8 @@ export function BuildStation() {
       </div>
 
       {drag && (
-        <div
-          className="drag-ghost"
-          style={{ left: drag.x, top: drag.y, background: COLOR_HEX[drag.color] }}
-        >
-          <span className="stud" />
-          <span className="stud" />
+        <div className="drag-ghost" style={{ left: drag.x, top: drag.y, color: COLOR_HEX[drag.color] }}>
+          <BrickSvg width={42} height={26} style={{ display: 'block' }} />
         </div>
       )}
     </div>

@@ -828,14 +828,13 @@ kbd {
   gap: 10px;
 }
 .tray-brick {
-  position: relative;
   border: none;
+  background: none;
+  padding: 0;
   cursor: grab;
-  width: 40px;
-  height: 26px;
-  border-radius: 4px;
-  box-shadow: inset 0 -3px rgba(0, 0, 0, 0.28), 0 2px 4px rgba(0, 0, 0, 0.4);
+  line-height: 0;
   touch-action: none;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
 }
 .tray-brick:active {
   cursor: grabbing;
@@ -844,13 +843,23 @@ kbd {
 .drag-ghost {
   position: fixed;
   z-index: 50;
-  width: 40px;
-  height: 26px;
-  border-radius: 4px;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  opacity: 0.92;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  line-height: 0;
+  opacity: 0.95;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+}
+.station-icon {
+  display: flex;
+  justify-content: center;
+  color: var(--purple-light);
+  margin-bottom: 0.4rem;
+}
+.head-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  color: var(--purple-light);
+  margin-right: 0.3rem;
 }
 .shake {
   animation: shake 0.3s;

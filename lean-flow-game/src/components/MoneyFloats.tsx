@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../game/store';
+import { CoinSvg } from './icons';
 
 interface FloatItem {
   id: number;
@@ -59,7 +60,7 @@ export function MoneyFloats() {
     <div className="float-layer">
       {floats.map((f) => (
         <span key={f.id} className={`money-float ${f.kind}`} style={{ left: f.x, top: f.y }}>
-          <span className="coin" />
+          <CoinSvg width={15} height={15} style={{ display: 'inline-block' }} />
           {f.text}
         </span>
       ))}

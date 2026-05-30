@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pile, type PileItem } from './Brick';
 
 interface StationProps {
@@ -11,9 +12,11 @@ interface StationProps {
   ai: boolean;
   /** Voortgang naar de volgende handeling (0..1). undefined = geen meter. */
   progress?: number;
+  /** Klein station-icoon dat toont wat hier gebeurt. */
+  icon?: ReactNode;
 }
 
-export function Station({ name, short, queue, blocked, ai, progress }: StationProps) {
+export function Station({ name, short, queue, blocked, ai, progress, icon }: StationProps) {
   return (
     <div className="station">
       <div className="station-queue">
@@ -21,6 +24,7 @@ export function Station({ name, short, queue, blocked, ai, progress }: StationPr
         <Pile items={queue} />
       </div>
       <div className={`station-body ${blocked ? 'idle' : 'busy'}`}>
+        {icon && <div className="station-icon">{icon}</div>}
         <div className="station-short">{short}</div>
         <div className="station-name">{name}</div>
         {progress != null && (

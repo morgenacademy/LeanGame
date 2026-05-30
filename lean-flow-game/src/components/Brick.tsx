@@ -1,15 +1,11 @@
 import { COLOR_HEX } from '../game/colors';
 import type { Color } from '../game/types';
+import { BrickSvg } from './icons';
 
-/** Eén LEGO-achtige steen. color=null toont grijs (onbewerkte WIP). */
+/** Eén LEGO-achtige steen (SVG, getint via currentColor). color=null = grijze WIP. */
 export function Brick({ color, size = 20 }: { color: Color | null; size?: number }) {
   const hex = color ? COLOR_HEX[color] : '#6e5f86';
-  return (
-    <span className="brick" style={{ background: hex, width: size, height: size * 0.6 }}>
-      <span className="stud" />
-      <span className="stud" />
-    </span>
-  );
+  return <BrickSvg width={size} height={size * 0.6} style={{ color: hex, display: 'block' }} />;
 }
 
 export interface PileItem {
