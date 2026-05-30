@@ -10,9 +10,6 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     svgr({
-      // Alleen ?react wordt een React-component; ?url blijft een gewone asset-URL
-      // (nodig voor de tile-textures in background-image).
-      include: '**/*.svg?react',
       svgrOptions: {
         // house-stages.svg heeft id="stage-1..4" die we per bouwfase tonen: niet strippen.
         svgoConfig: {

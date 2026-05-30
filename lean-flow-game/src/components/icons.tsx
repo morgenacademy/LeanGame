@@ -10,11 +10,12 @@ import CoinSvg from '../assets/game/coin.svg?react';
 import CustomerSvg from '../assets/game/customer.svg?react';
 import HouseStagesSvg from '../assets/game/house-stages.svg?react';
 
-// Tileable textures als URL (CSS-achtergronden). ?url forceert een URL i.p.v.
-// een svgr-component, zodat ze in background-image werken.
-import beltTileUrl from '../assets/game/belt-tile.svg?url';
-import floorTileUrl from '../assets/game/floor-tile.svg?url';
-import hazardStripUrl from '../assets/game/hazard-strip.svg?url';
+// Tileable textures staan in public/textures/ (raakt svgr niet aan, werkt in dev
+// én build). BASE_URL respecteert de /LeanGame/ project-base in productie.
+const tex = (name: string) => `${import.meta.env.BASE_URL}textures/${name}`;
+const beltTileUrl = tex('belt-tile.svg');
+const floorTileUrl = tex('floor-tile.svg');
+const hazardStripUrl = tex('hazard-strip.svg');
 
 export {
   BrickSvg,
