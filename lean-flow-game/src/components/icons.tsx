@@ -10,14 +10,6 @@ import CoinSvg from '../assets/game/coin.svg?react';
 import CustomerSvg from '../assets/game/customer.svg?react';
 import HouseStagesSvg from '../assets/game/house-stages.svg?react';
 
-// Tileable textures staan in public/textures/ (raakt svgr niet aan, werkt in dev
-// én build). BASE_URL respecteert de /LeanGame/ project-base in productie.
-const tex = (name: string) => `${import.meta.env.BASE_URL}textures/${name}`;
-const beltTileUrl = tex('belt-tile.svg');
-const floorTileUrl = tex('floor-tile.svg');
-const hazardStripUrl = tex('hazard-strip.svg');
-const machineFrameUrl = tex('machine-frame.svg');
-
 export {
   BrickSvg,
   HouseSvg,
@@ -28,8 +20,4 @@ export {
   CoinSvg,
   CustomerSvg,
   HouseStagesSvg,
-  beltTileUrl,
-  floorTileUrl,
-  hazardStripUrl,
-  machineFrameUrl,
 };

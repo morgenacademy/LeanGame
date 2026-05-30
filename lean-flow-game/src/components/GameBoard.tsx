@@ -15,11 +15,8 @@ import {
   SetSvg,
   HouseSvg,
   CustomerSvg,
-  beltTileUrl,
-  floorTileUrl,
-  hazardStripUrl,
-  machineFrameUrl,
 } from './icons';
+import { beltTileUrl, floorTileUrl, hazardStripUrl, machineFrameUrl } from '../game/textureUrls';
 
 export function GameBoard() {
   const g = useGame((s) => s.g);
@@ -93,7 +90,10 @@ function Belt({ trigger, kind, color }: { trigger: number; kind: 'brick' | 'hous
   const [slides, setSlides] = useState<{ id: number; color: Color | null }[]>([]);
   const prev = useRef(trigger);
   const colorRef = useRef<Color | null | undefined>(color);
-  colorRef.current = color;
+
+  useEffect(() => {
+    colorRef.current = color;
+  }, [color]);
 
   useEffect(() => {
     if (trigger !== prev.current) {
@@ -107,18 +107,18 @@ function Belt({ trigger, kind, color }: { trigger: number; kind: 'brick' | 'hous
   }, [trigger]);
 
   return (
-    <div className="belt" aria-hidden>
+    <div className={`belt belt-${kind}`} aria-hidden>
       <div className="belt-tread" style={{ backgroundImage: `url(${beltTileUrl})` }} />
       {slides.map((s) => (
         <span key={s.id} className="belt-item">
           {kind === 'house' ? (
             <HouseSvg
-              width={15}
-              height={18}
+              width={23}
+              height={28}
               style={{ color: s.color ? COLOR_HEX[s.color] : '#9b6fcf', display: 'block' }}
             />
           ) : (
-            <Brick color={s.color} size={15} />
+            <Brick color={s.color} size={28} />
           )}
         </span>
       ))}

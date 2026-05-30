@@ -1361,3 +1361,617 @@ kbd {
     min-width: 120px;
   }
 }
+
+/* ============================================================
+   Factory-stage visual pass
+   ============================================================ */
+:root {
+  --purple: #6b4f93;
+  --purple-light: #9c8bc2;
+  --accent: #d8fe56;
+  --accent-soft: rgba(216, 254, 86, 0.16);
+  --bg-dark: #06080b;
+  --text-primary: #f4f7fb;
+  --text-secondary: #c6d0dc;
+  --text-muted: #798694;
+  --card-bg: rgba(8, 12, 18, 0.86);
+  --card-bg-strong: rgba(5, 8, 12, 0.94);
+  --card-border: rgba(239, 247, 255, 0.32);
+  --glass-blur: blur(16px) saturate(120%);
+  --radius: 8px;
+  --radius-lg: 10px;
+}
+
+body {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 22%),
+    linear-gradient(180deg, #161b21 0%, #07090d 58%, #030406 100%);
+}
+
+body::before {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 52% at 50% 0%, rgba(216, 254, 86, 0.06), transparent 62%);
+  background-size: 54px 54px, 54px 54px, 100% 100%;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 88%);
+}
+
+#root {
+  max-width: 1480px;
+  padding: 14px;
+}
+
+.board {
+  min-height: calc(100svh - 28px);
+}
+
+.card-glass,
+.intro-card,
+.final,
+.debrief,
+.tour-card,
+.narrator-bubble {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(12, 17, 24, 0.95), rgba(4, 6, 10, 0.92));
+  border: 1px solid var(--card-border);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.hud {
+  position: sticky;
+  top: 10px;
+  z-index: 5;
+  margin-bottom: 0.7rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07), transparent 34%),
+    rgba(3, 5, 8, 0.9);
+  border: 1px solid rgba(241, 248, 255, 0.42);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.eyebrow {
+  color: #eef5ff;
+  letter-spacing: 0.13em;
+}
+
+.mode-tag {
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mode-tag.push {
+  background: rgba(255, 122, 57, 0.12);
+  color: #ff9b45;
+}
+
+.mode-tag.pull {
+  background: rgba(216, 254, 86, 0.12);
+  color: var(--accent);
+}
+
+.timer-num {
+  color: #f8fbff;
+  text-shadow: 0 0 18px rgba(216, 254, 86, 0.22);
+}
+
+.timer-bar,
+.work-meter {
+  height: 6px;
+  border-radius: 0;
+  background: #07090d;
+  border: 1px solid rgba(241, 248, 255, 0.18);
+}
+
+.timer-fill,
+.work-fill {
+  border-radius: 0;
+  background: linear-gradient(90deg, #ffffff, var(--accent));
+  box-shadow: 0 0 14px rgba(216, 254, 86, 0.55);
+}
+
+.hud-stats {
+  gap: 0.5rem;
+}
+
+.stat {
+  min-width: 88px;
+  padding: 0.46rem 0.7rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(239, 247, 255, 0.18);
+}
+
+.stat-value {
+  font-size: 1.38rem;
+}
+
+.stat-label {
+  letter-spacing: 0.11em;
+}
+
+.line {
+  align-items: stretch;
+  gap: 12px;
+  padding: 88px 8px 18px;
+  perspective: 1200px;
+  scrollbar-color: rgba(255, 255, 255, 0.34) transparent;
+}
+
+.factory-zone {
+  flex: 0 0 920px;
+  gap: 8px;
+  padding: 50px 14px 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(244, 250, 255, 0.9);
+  background-color: rgba(3, 5, 8, 0.78);
+  background-size: 54px 54px;
+  box-shadow:
+    0 24px 52px rgba(0, 0, 0, 0.56),
+    inset 0 0 52px rgba(0, 0, 0, 0.75);
+  overflow: visible;
+}
+
+.factory-zone::before {
+  content: 'DE FABRIEK';
+  top: 18px;
+  left: 20px;
+  color: rgba(239, 247, 255, 0.62);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+}
+
+.hazard-top {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: min(36%, 380px);
+  height: 10px;
+  background-size: auto 10px;
+  opacity: 0.8;
+}
+
+.station {
+  min-width: 144px;
+  position: relative;
+}
+
+.station-queue {
+  min-height: 128px;
+  padding: 0.75rem 0.55rem 1rem;
+}
+
+.station-queue::before {
+  content: '';
+  position: absolute;
+  inset: 25px 7px 9px;
+  border: 1px solid rgba(244, 250, 255, 0.36);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    rgba(0, 0, 0, 0.32);
+  background-size: 14px 14px;
+  transform: skewX(-6deg);
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.58);
+}
+
+.queue-count {
+  z-index: 1;
+  top: 0.38rem;
+  right: 0.55rem;
+  min-width: 1.75rem;
+  padding: 0.08rem 0.32rem;
+  border-radius: 3px;
+  background: #030507;
+  border: 1px solid rgba(241, 248, 255, 0.26);
+  color: #f6fbff;
+  text-align: center;
+}
+
+.pile {
+  position: relative;
+  z-index: 1;
+  max-width: 152px;
+  min-height: 62px;
+  gap: 5px;
+}
+
+.brick-wrap,
+.tray-brick,
+.belt-item {
+  filter:
+    drop-shadow(0 7px 0 rgba(0, 0, 0, 0.24))
+    drop-shadow(0 10px 12px rgba(0, 0, 0, 0.45));
+}
+
+.pile-empty {
+  padding: 0.22rem 0.45rem;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.44);
+  color: rgba(239, 247, 255, 0.5);
+  font-style: normal;
+}
+
+.station-body,
+.player-station .build-body,
+.market .station-body.market-body {
+  position: relative;
+  min-height: 168px;
+  padding: 0.9rem;
+  border-radius: 5px;
+  border: 2px solid rgba(244, 250, 255, 0.86);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, #11161c, #05070a 70%);
+  background-size: 22px 22px, 22px 22px, 100% 100%;
+  box-shadow:
+    0 15px 0 rgba(0, 0, 0, 0.44),
+    0 24px 34px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.7);
+}
+
+.station-body.machine {
+  border: 2px solid rgba(244, 250, 255, 0.86);
+  border-image: none;
+  padding: 0.9rem;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, #11161c, #05070a 70%);
+  background-size: 22px 22px, 22px 22px, 100% 100%;
+}
+
+.station-body::before,
+.player-station .build-body::before,
+.market .station-body.market-body::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  border: 1px solid rgba(244, 250, 255, 0.2);
+}
+
+.station-body.busy {
+  border-color: rgba(245, 255, 229, 0.98);
+  box-shadow:
+    0 15px 0 rgba(0, 0, 0, 0.44),
+    0 0 26px rgba(216, 254, 86, 0.18),
+    inset 0 0 0 1px rgba(216, 254, 86, 0.16);
+}
+
+.station-body.machine.busy {
+  border-color: rgba(245, 255, 229, 0.98);
+  box-shadow:
+    0 15px 0 rgba(0, 0, 0, 0.44),
+    0 0 26px rgba(216, 254, 86, 0.18),
+    inset 0 0 0 1px rgba(216, 254, 86, 0.16);
+}
+
+.station-body.idle {
+  opacity: 0.66;
+  border-color: rgba(244, 250, 255, 0.42);
+}
+
+.station-icon {
+  color: #f5fbff;
+  margin: 0.05rem 0 0.45rem;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.22));
+}
+
+.station-short {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(216, 254, 86, 0.22);
+}
+
+.station-name {
+  color: var(--text-secondary);
+}
+
+.station-status {
+  color: rgba(239, 247, 255, 0.58);
+}
+
+.station-status .dot {
+  background: currentColor;
+}
+
+.belt {
+  width: 58px;
+  height: 48px;
+  border-radius: 4px;
+  border: 2px solid rgba(244, 250, 255, 0.9);
+  background: #010204;
+  box-shadow:
+    0 12px 0 rgba(0, 0, 0, 0.36),
+    0 20px 26px rgba(0, 0, 0, 0.35),
+    inset 0 0 18px rgba(0, 0, 0, 0.85);
+}
+
+.belt::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(244, 250, 255, 0.22);
+  pointer-events: none;
+}
+
+.belt-house {
+  width: 70px;
+}
+
+.belt-tread {
+  background-size: 26px 26px;
+  opacity: 0.7;
+}
+
+.belt-item {
+  top: 46%;
+  animation-duration: 0.82s;
+}
+
+.player-station {
+  flex: 1.65 1 0;
+  min-width: 210px;
+}
+
+.player-station .build-body {
+  border-color: var(--accent);
+  background:
+    linear-gradient(rgba(216, 254, 86, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 254, 86, 0.07) 1px, transparent 1px),
+    linear-gradient(180deg, #141a16, #040704 72%);
+  background-size: 20px 20px, 20px 20px, 100% 100%;
+  box-shadow:
+    0 15px 0 rgba(0, 0, 0, 0.44),
+    0 0 32px rgba(216, 254, 86, 0.22),
+    inset 0 0 0 1px rgba(216, 254, 86, 0.22);
+}
+
+.build-head {
+  position: relative;
+  z-index: 1;
+}
+
+.head-icon {
+  color: #f6fbff;
+}
+
+.you-badge {
+  border-radius: 3px;
+}
+
+.assembly-label {
+  position: relative;
+  z-index: 1;
+  justify-content: center;
+  color: #edf4ff;
+}
+
+.blueprint {
+  position: relative;
+  z-index: 1;
+  min-height: 126px;
+  border-radius: 4px;
+  border: 1px solid rgba(216, 254, 86, 0.58);
+  background:
+    linear-gradient(rgba(216, 254, 86, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 254, 86, 0.08) 1px, transparent 1px),
+    rgba(0, 0, 0, 0.36);
+  background-size: 18px 18px;
+}
+
+.house-stages-wrap {
+  position: relative;
+  display: block;
+}
+
+.house-stages-wrap svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.house-ghost {
+  color: rgba(255, 255, 255, 0.42);
+  opacity: 0.18;
+}
+
+.house-built {
+  color: currentColor;
+  filter:
+    drop-shadow(0 7px 0 rgba(0, 0, 0, 0.24))
+    drop-shadow(0 10px 12px rgba(0, 0, 0, 0.42));
+}
+
+.house-built.s0 {
+  opacity: 0;
+}
+
+.house-built.s1 #stage-2,
+.house-built.s1 #stage-3,
+.house-built.s1 #stage-4,
+.house-built.s2 #stage-3,
+.house-built.s2 #stage-4,
+.house-built.s3 #stage-4 {
+  display: none;
+}
+
+.tray {
+  position: relative;
+  z-index: 1;
+}
+
+.tray-label {
+  color: rgba(239, 247, 255, 0.62);
+}
+
+.tray-brick {
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.tray-brick:hover {
+  transform: translateY(-3px);
+}
+
+.build-zone {
+  position: relative;
+  z-index: 1;
+  min-height: 154px;
+  border-radius: 4px;
+  border-color: rgba(216, 254, 86, 0.38);
+  background:
+    linear-gradient(rgba(216, 254, 86, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 254, 86, 0.08) 1px, transparent 1px),
+    rgba(0, 0, 0, 0.34);
+  background-size: 18px 18px;
+}
+
+.market {
+  min-width: 150px;
+}
+
+.market .station-body.market-body {
+  border-color: rgba(244, 250, 255, 0.8);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(180deg, #171c18, #070906 72%);
+  background-size: 22px 22px, 22px 22px, 100% 100%;
+}
+
+.market-awning {
+  height: 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.52);
+  background: repeating-linear-gradient(90deg, var(--accent) 0 16px, #f4f7fb 16px 32px);
+  mask: none;
+  -webkit-mask: none;
+}
+
+.market-customer {
+  color: #f4f7fb;
+  filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.5));
+}
+
+.demand-bubble {
+  border-radius: 5px;
+  background: rgba(3, 5, 8, 0.95);
+  border-color: rgba(244, 250, 255, 0.46);
+}
+
+.demand-bubble.known {
+  border-color: rgba(216, 254, 86, 0.8);
+  box-shadow: 0 0 24px rgba(216, 254, 86, 0.16);
+}
+
+.house {
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
+}
+
+.narrator {
+  margin-top: 1.6rem;
+}
+
+.narrator-bubble {
+  border-radius: 7px;
+}
+
+.btn-primary {
+  border-radius: 5px;
+}
+
+@media (max-width: 900px) {
+  #root {
+    padding: 10px;
+  }
+
+  .hud {
+    position: relative;
+    top: auto;
+  }
+
+  .line {
+    padding-top: 80px;
+  }
+
+  .factory-zone {
+    flex-basis: 900px;
+    padding-inline: 14px;
+  }
+}
+
+@media (max-width: 1100px) {
+  #root {
+    padding: 10px;
+  }
+
+  .hud {
+    gap: 0.8rem;
+  }
+
+  .line {
+    gap: 8px;
+    padding-inline: 0;
+  }
+
+  .factory-zone {
+    flex-basis: 760px;
+    gap: 6px;
+    padding: 48px 10px 14px;
+  }
+
+  .station {
+    min-width: 118px;
+  }
+
+  .player-station {
+    min-width: 170px;
+  }
+
+  .market {
+    min-width: 118px;
+  }
+
+  .belt {
+    width: 42px;
+  }
+
+  .belt-house {
+    width: 48px;
+  }
+
+  .station-queue {
+    min-height: 110px;
+  }
+
+  .station-body,
+  .station-body.machine,
+  .player-station .build-body,
+  .market .station-body.market-body {
+    min-height: 150px;
+    padding: 0.68rem;
+  }
+
+  .station-short {
+    font-size: 0.62rem;
+  }
+
+  .station-name {
+    font-size: 0.76rem;
+  }
+
+  .blueprint {
+    min-height: 108px;
+  }
+
+  .tray-bricks {
+    gap: 6px;
+  }
+}

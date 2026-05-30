@@ -17,8 +17,12 @@ interface StationProps {
 }
 
 export function Station({ name, short, queue, blocked, ai, progress, icon }: StationProps) {
+  const cls = ['station', ai ? 'station-ai' : 'station-player', blocked && 'station-blocked']
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="station">
+    <div className={cls}>
       <div className="station-queue">
         <span className="queue-count">{queue.length}</span>
         <Pile items={queue} />
