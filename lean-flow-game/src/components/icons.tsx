@@ -10,10 +10,11 @@ import CoinSvg from '../assets/game/coin.svg?react';
 import CustomerSvg from '../assets/game/customer.svg?react';
 import HouseStagesSvg from '../assets/game/house-stages.svg?react';
 
-// Tileable textures als URL (CSS-achtergronden).
-import beltTileUrl from '../assets/game/belt-tile.svg';
-import floorTileUrl from '../assets/game/floor-tile.svg';
-import hazardStripUrl from '../assets/game/hazard-strip.svg';
+// Tileable textures als URL (CSS-achtergronden). ?url forceert een URL i.p.v.
+// een svgr-component, zodat ze in background-image werken.
+import beltTileUrl from '../assets/game/belt-tile.svg?url';
+import floorTileUrl from '../assets/game/floor-tile.svg?url';
+import hazardStripUrl from '../assets/game/hazard-strip.svg?url';
 
 export {
   BrickSvg,
