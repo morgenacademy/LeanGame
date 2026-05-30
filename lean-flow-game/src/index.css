@@ -320,6 +320,33 @@ kbd {
   padding-top: 104px;
   padding-bottom: 0.6rem;
 }
+
+/* De 4 werkplekken staan op een herkenbare fabrieksvloer; de markt valt erbuiten. */
+.factory-zone {
+  display: flex;
+  align-items: stretch;
+  gap: 0.3rem;
+  flex: 4 1 auto;
+  position: relative;
+  padding: 1.6rem 1rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(155, 111, 207, 0.3);
+  background-color: rgba(9, 6, 18, 0.55);
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(255, 255, 255, 0.035) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(255, 255, 255, 0.035) 23px 24px);
+  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.5);
+}
+.factory-zone::before {
+  content: '⚙ DE FABRIEK';
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+}
 .station {
   flex: 1 1 0;
   min-width: 140px;
@@ -1066,6 +1093,30 @@ kbd {
   font-weight: 900;
   color: var(--text-muted);
   line-height: 1;
+}
+
+/* Markt = buiten de fabriek: open marktkraam-look (luifel + klant), lichter/warmer. */
+.market .station-body.market-body {
+  position: relative;
+  padding-top: 1rem;
+  background: linear-gradient(180deg, rgba(216, 254, 86, 0.08), rgba(255, 255, 255, 0.07));
+  border-color: rgba(216, 254, 86, 0.3);
+  overflow: hidden;
+}
+.market-awning {
+  height: 16px;
+  margin: -0.8rem -0.8rem 0.7rem;
+  background: repeating-linear-gradient(90deg, #d8fe56 0 14px, #f3eff8 14px 28px);
+  -webkit-mask: radial-gradient(circle 7px at 7px 16px, transparent 7px, #000 7.5px) repeat-x;
+  mask: radial-gradient(circle 7px at 7px 16px, transparent 7px, #000 7.5px) repeat-x;
+  -webkit-mask-size: 14px 100%;
+  mask-size: 14px 100%;
+}
+.market-customer {
+  display: flex;
+  justify-content: center;
+  color: var(--text-primary);
+  margin-bottom: 0.3rem;
 }
 
 /* Startscherm: kader + powered-by eronder */

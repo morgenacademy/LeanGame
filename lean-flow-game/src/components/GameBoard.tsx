@@ -27,6 +27,7 @@ export function GameBoard() {
       <Hud />
 
       <div className="line">
+        <div className="factory-zone">
         <Station
           name="Sorteren op kleur"
           short="Materiaal"
@@ -58,6 +59,7 @@ export function GameBoard() {
         />
         <Arrow />
         <BuildStation />
+        </div>
         <Arrow />
         <Market />
       </div>
@@ -92,21 +94,17 @@ function Market() {
         )}
       </div>
       <div className="station-queue market-houses">
-        {houses.length === 0 && <span className="pile-empty">nog niets geleverd</span>}
         {shown.map((h) => (
           <House key={h.id} color={h.color} sold={h.sold} revealed={g.demandRevealed} />
         ))}
       </div>
-      <div className="station-body">
-        <div className="station-icon">
-          <CustomerSvg width={30} height={30} />
-        </div>
-        <div className="station-short">Markt</div>
-        <div className="station-name">
-          De klant <span className="market-sub">buiten de fabriek</span>
+      <div className="station-body market-body">
+        <div className="market-awning" />
+        <div className="market-customer">
+          <CustomerSvg width={46} height={46} />
         </div>
         <div className="station-status market-score">
-          {g.demandRevealed ? `${g.metrics.housesSold}/${g.metrics.housesBuilt} verkocht` : 'vraag onbekend'}
+          {g.demandRevealed ? `${g.metrics.housesSold}/${g.metrics.housesBuilt} verkocht` : ''}
         </div>
       </div>
     </div>
