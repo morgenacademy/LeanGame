@@ -23,14 +23,29 @@ export function Hud() {
 
   return (
     <div className="hud">
-      <div className="hud-left">
-        <div className="round-badge">
-          <span className="eyebrow">{cfg.title}</span>
-          <span className={`mode-tag ${g.mode}`}>{g.mode === 'push' ? 'PUSH' : 'PULL'}</span>
+      <div className="hud-tile hud-round">
+        <div className="hud-label">Ronde</div>
+        <div className="round-pips" aria-label={cfg.title}>
+          {ROUNDS.map((_, i) => (
+            <span key={i} className={i <= g.roundIndex ? 'active' : ''} />
+          ))}
         </div>
+      </div>
+
+      <div className="hud-tile hud-mode">
+        <div className="hud-label">Modus</div>
+        <div className={`mode-flow ${g.mode}`}>
+          <span className="mode-dot" />
+          <span className="mode-line" />
+          <span className="mode-end" />
+          <span className="mode-text">{g.mode === 'push' ? 'Push' : 'Pull'}</span>
+        </div>
+      </div>
+
+      <div className="hud-tile hud-timer">
         <div className="timer">
-          <span className="timer-num">{remaining}</span>
-          <span className="timer-unit">s</span>
+          <span className="timer-icon" aria-hidden>◷</span>
+          <span className="timer-num">00:{String(remaining).padStart(2, '0')}</span>
         </div>
         <div className="timer-bar">
           <div className="timer-fill" style={{ width: `${Math.min(100, progress * 100)}%` }} />
@@ -38,24 +53,28 @@ export function Hud() {
       </div>
 
       <div className="hud-stats">
-        <Stat label="Gebouwd" value={m.housesBuilt} />
-        <Stat label="Verkocht" value={hidden ? '?' : m.housesSold} />
-        <Stat label="WIP nu" value={wipNow} warn={wipNow >= 6} />
-        <Stat label="Stenen gekocht" value={euro(-liveCost)} bad={liveCost > 0} />
-        <Stat label="Winst" value={hidden ? '?' : euro(liveProfit)} good={!hidden && liveProfit >= 0} bad={!hidden && liveProfit < 0} />
+        <Stat label="Gebouwd" icon="▱" value={m.housesBuilt} />
+        <Stat label="Verkocht" icon="⌂" value={hidden ? '?' : m.housesSold} />
+        <Stat label="WIP" icon="▦" value={wipNow} warn={wipNow >= 6} />
+        <Stat label="Kosten" icon="▱" value={euro(-liveCost)} bad={liveCost > 0} />
+        <Stat label="Winst" icon="€" value={hidden ? '?' : euro(liveProfit)} good={!hidden && liveProfit >= 0} bad={!hidden && liveProfit < 0} />
       </div>
+
+      <div className="hud-menu" aria-hidden>☰</div>
     </div>
   );
 }
 
 function Stat({
   label,
+  icon,
   value,
   warn,
   good,
   bad,
 }: {
   label: string;
+  icon: string;
   value: string | number;
   warn?: boolean;
   good?: boolean;
@@ -64,8 +83,11 @@ function Stat({
   const cls = ['stat', warn && 'warn', good && 'good', bad && 'bad'].filter(Boolean).join(' ');
   return (
     <div className={cls}>
-      <div className="stat-value">{value}</div>
       <div className="stat-label">{label}</div>
+      <div className="stat-main">
+        <span className="stat-icon" aria-hidden>{icon}</span>
+        <span className="stat-value">{value}</span>
+      </div>
     </div>
   );
 }

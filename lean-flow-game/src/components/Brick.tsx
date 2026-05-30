@@ -1,11 +1,21 @@
+import type { CSSProperties } from 'react';
 import { COLOR_HEX } from '../game/colors';
 import type { Color } from '../game/types';
-import { BrickSvg } from './icons';
 
-/** Eén LEGO-achtige steen (SVG, getint via currentColor). color=null = grijze WIP. */
+/** Eén werkblok. color=null = neutrale ruwe WIP. */
 export function Brick({ color, size = 20 }: { color: Color | null; size?: number }) {
   const hex = color ? COLOR_HEX[color] : '#6e5f86';
-  return <BrickSvg width={size} height={size * 0.6} style={{ color: hex, display: 'block' }} />;
+  return (
+    <span
+      className="cube-brick"
+      style={
+        {
+          '--cube-color': hex,
+          '--cube-size': `${size}px`,
+        } as CSSProperties
+      }
+    />
+  );
 }
 
 export interface PileItem {
@@ -17,7 +27,7 @@ export interface PileItem {
  * Een stapel stenen met telling. Items zijn gesleuteld op id, zodat alleen
  * een nieuw binnengekomen steen de pop-animatie krijgt (de stapel "groeit" zichtbaar).
  */
-export function Pile({ items, max = 10 }: { items: PileItem[]; max?: number }) {
+export function Pile({ items, max = 12 }: { items: PileItem[]; max?: number }) {
   const shown = items.slice(0, max);
   const extra = items.length - shown.length;
   return (

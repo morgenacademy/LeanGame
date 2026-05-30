@@ -83,7 +83,8 @@ export function Tour() {
   }, [step]);
 
   const pad = 10;
-  const tipTop = rect ? rect.bottom + 16 : window.innerHeight / 2;
+  const tipTopRaw = rect ? rect.bottom + 16 : window.innerHeight / 2;
+  const tipTop = Math.min(Math.max(tipTopRaw, 96), window.innerHeight - 280);
   const tipLeft = rect
     ? Math.min(Math.max(rect.left + rect.width / 2, 230), window.innerWidth - 230)
     : window.innerWidth / 2;

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../game/store';
-import { Pile } from './Brick';
+import { Brick, Pile } from './Brick';
 import { COLORS } from '../game/config';
 import { COLOR_HEX, COLOR_LABEL } from '../game/colors';
 import type { Color } from '../game/types';
-import { BrickSvg, BuilderSvg, HouseStagesSvg } from './icons';
+import { BuilderSvg, HouseStagesSvg } from './icons';
 
 interface Drag {
   color: Color;
@@ -60,6 +60,11 @@ export function BuildStation() {
       </div>
 
       <div className="build-body">
+        <div className="robot-arm" aria-hidden>
+          <span className="robot-joint" />
+          <span className="robot-boom" />
+          <span className="robot-claw" />
+        </div>
         <div className="build-head">
           <div className="station-short">
             <span className="head-icon">
@@ -96,7 +101,7 @@ export function BuildStation() {
                       setDrag({ color: c, x: e.clientX, y: e.clientY });
                     }}
                   >
-                    <BrickSvg width={40} height={24} style={{ display: 'block', pointerEvents: 'none' }} />
+                    <Brick color={c} size={34} />
                   </button>
                 ))}
               </div>
@@ -114,7 +119,7 @@ export function BuildStation() {
 
       {drag && (
         <div className="drag-ghost" style={{ left: drag.x, top: drag.y, color: COLOR_HEX[drag.color] }}>
-          <BrickSvg width={42} height={26} style={{ display: 'block' }} />
+          <Brick color={drag.color} size={38} />
         </div>
       )}
     </div>
