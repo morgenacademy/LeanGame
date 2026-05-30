@@ -9,7 +9,16 @@ import { Brick } from './Brick';
 import { RAW_SUPPLY, ROUNDS } from '../game/config';
 import { COLOR_HEX } from '../game/colors';
 import type { Color } from '../game/types';
-import { SortColorSvg, SortSizeSvg, SetSvg, HouseSvg, CustomerSvg } from './icons';
+import {
+  SortColorSvg,
+  SortSizeSvg,
+  SetSvg,
+  HouseSvg,
+  CustomerSvg,
+  beltTileUrl,
+  floorTileUrl,
+  hazardStripUrl,
+} from './icons';
 
 export function GameBoard() {
   const g = useGame((s) => s.g);
@@ -31,7 +40,8 @@ export function GameBoard() {
       <Hud />
 
       <div className="line">
-        <div className="factory-zone">
+        <div className="factory-zone" style={{ backgroundImage: `url(${floorTileUrl})` }}>
+          <div className="hazard-top" style={{ backgroundImage: `url(${hazardStripUrl})` }} />
           <Station
             name="Sorteren op kleur"
             short="Materiaal"
@@ -97,7 +107,7 @@ function Belt({ trigger, kind, color }: { trigger: number; kind: 'brick' | 'hous
 
   return (
     <div className="belt" aria-hidden>
-      <div className="belt-tread" />
+      <div className="belt-tread" style={{ backgroundImage: `url(${beltTileUrl})` }} />
       {slides.map((s) => (
         <span key={s.id} className="belt-item">
           {kind === 'house' ? (

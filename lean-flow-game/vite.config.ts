@@ -7,5 +7,15 @@ import svgr from 'vite-plugin-svgr'
 // Lokaal (dev/preview) blijft de base gewoon '/'.
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/LeanGame/' : '/',
-  plugins: [react(), svgr()],
+  plugins: [
+    react(),
+    // cleanupIds uit: house-stages.svg heeft id="stage-1..4" die we per bouwfase tonen.
+    svgr({
+      svgrOptions: {
+        svgoConfig: {
+          plugins: [{ name: 'preset-default', params: { overrides: { cleanupIds: false } } }],
+        },
+      },
+    }),
+  ],
 }))
