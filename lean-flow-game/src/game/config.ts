@@ -54,10 +54,10 @@ export const ROUNDS: RoundConfig[] = [
     title: 'Ronde 1',
     subtitle: 'Zo snel mogelijk',
     intro: [
-      'Jij bent de bouwer — de laatste werkplek in de fabriek.',
+      'Jij bent de bouwer, de laatste werkplek in de fabriek.',
       'De fabriek draait op volle kracht: ieder station maakt zoveel mogelijk, zo snel mogelijk.',
       'Jouw doel: lever zoveel mogelijk huizen die de klant koopt, en maak winst.',
-      'Welke kleur de klant wil? Dat hoor je pas aan het eind — je bouwt dus blind.',
+      'Welke kleur de klant wil? Dat hoor je pas aan het eind, je bouwt dus blind.',
     ],
   },
   {

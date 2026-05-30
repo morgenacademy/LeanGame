@@ -1094,6 +1094,10 @@ kbd {
   color: var(--text-muted);
   line-height: 1;
 }
+.bubble-sub {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
 
 /* Markt = buiten de fabriek: open marktkraam-look (luifel + klant), lichter/warmer. */
 .market .station-body.market-body {

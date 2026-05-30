@@ -114,7 +114,7 @@ export function BuildStation() {
           <div className="build-zone">
             <div className="waiting">
               <div className="waiting-title">Wachten op materiaal…</div>
-              <div className="build-hint">upstream vult bij (WIP-limiet) — de lijn stroomt nog</div>
+              <div className="build-hint">upstream vult bij (WIP-limiet), de lijn stroomt nog</div>
             </div>
           </div>
         )}

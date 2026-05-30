@@ -81,15 +81,13 @@ function Market() {
   return (
     <div className="station market">
       <div className={`demand-bubble ${g.demandRevealed ? 'known' : 'unknown'}`}>
+        <span className="bubble-label">Klant wil</span>
         {g.demandRevealed && g.demandColor ? (
-          <>
-            <span className="bubble-label">dit wil ik:</span>
-            <House color={g.demandColor} sold revealed={false} />
-          </>
+          <House color={g.demandColor} sold revealed={false} />
         ) : (
           <>
             <span className="bubble-q">?</span>
-            <span className="bubble-label">zeg ik aan ’t eind</span>
+            <span className="bubble-sub">hoor je pas aan het eind</span>
           </>
         )}
       </div>
