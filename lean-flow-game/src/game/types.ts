@@ -39,6 +39,8 @@ export interface StationState {
   blocked: boolean;
   /** Heeft dit station deze tick daadwerkelijk iets verwerkt? (voor een korte puls-animatie) */
   justActed: boolean;
+  /** Monotone teller van afgeleverde stuks (drijft de schuif-animatie op de band). */
+  produced: number;
   /** De speler bedient dit station handmatig. */
   isPlayer: boolean;
 }

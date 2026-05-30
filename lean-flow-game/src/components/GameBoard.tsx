@@ -1,9 +1,11 @@
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../game/store';
 import { Hud } from './Hud';
 import { Station } from './Station';
 import { BuildStation } from './BuildStation';
 import { Narrator } from './Narrator';
 import { MoneyFloats } from './MoneyFloats';
+import { Brick } from './Brick';
 import { RAW_SUPPLY, ROUNDS } from '../game/config';
 import { COLOR_HEX } from '../game/colors';
 import type { Color } from '../game/types';
@@ -21,6 +23,8 @@ export function GameBoard() {
   };
 
   const rawItems = Array.from({ length: rawLeft }, (_, i) => ({ id: -1 - i, color: null }));
+  const lastDColor = g.stations[3].buffer[g.stations[3].buffer.length - 1]?.color ?? null;
+  const lastBuilt = g.built[g.built.length - 1]?.color;
 
   return (
     <div className="board">
@@ -28,39 +32,39 @@ export function GameBoard() {
 
       <div className="line">
         <div className="factory-zone">
-        <Station
-          name="Sorteren op kleur"
-          short="Materiaal"
-          queue={rawItems}
-          blocked={g.stations[0].blocked}
-          progress={prog(0)}
-          icon={<SortColorSvg width={24} height={24} />}
-          ai
-        />
-        <Arrow />
-        <Station
-          name={g.stations[1].name}
-          short={g.stations[1].short}
-          queue={g.stations[1].buffer}
-          blocked={g.stations[1].blocked}
-          progress={prog(1)}
-          icon={<SortSizeSvg width={24} height={24} />}
-          ai
-        />
-        <Arrow />
-        <Station
-          name={g.stations[2].name}
-          short={g.stations[2].short}
-          queue={g.stations[2].buffer}
-          blocked={g.stations[2].blocked}
-          progress={prog(2)}
-          icon={<SetSvg width={24} height={24} />}
-          ai
-        />
-        <Arrow />
-        <BuildStation />
+          <Station
+            name="Sorteren op kleur"
+            short="Materiaal"
+            queue={rawItems}
+            blocked={g.stations[0].blocked}
+            progress={prog(0)}
+            icon={<SortColorSvg width={24} height={24} />}
+            ai
+          />
+          <Belt trigger={g.stations[0].produced} kind="brick" />
+          <Station
+            name={g.stations[1].name}
+            short={g.stations[1].short}
+            queue={g.stations[1].buffer}
+            blocked={g.stations[1].blocked}
+            progress={prog(1)}
+            icon={<SortSizeSvg width={24} height={24} />}
+            ai
+          />
+          <Belt trigger={g.stations[1].produced} kind="brick" />
+          <Station
+            name={g.stations[2].name}
+            short={g.stations[2].short}
+            queue={g.stations[2].buffer}
+            blocked={g.stations[2].blocked}
+            progress={prog(2)}
+            icon={<SetSvg width={24} height={24} />}
+            ai
+          />
+          <Belt trigger={g.stations[2].produced} kind="brick" color={lastDColor} />
+          <BuildStation />
         </div>
-        <Arrow />
+        <Belt trigger={g.metrics.housesBuilt} kind="house" color={lastBuilt} />
         <Market />
       </div>
 
@@ -70,8 +74,45 @@ export function GameBoard() {
   );
 }
 
-function Arrow() {
-  return <div className="flow-arrow">→</div>;
+let beltSlideId = 0;
+
+/** Lopende band tussen twee werkplekken. Elke keer dat `trigger` ophoogt (een stuk
+ *  werk is afgeleverd) schuift er een item overheen. In pull (geknepen) dus rustiger. */
+function Belt({ trigger, kind, color }: { trigger: number; kind: 'brick' | 'house'; color?: Color | null }) {
+  const [slides, setSlides] = useState<{ id: number; color: Color | null }[]>([]);
+  const prev = useRef(trigger);
+  const colorRef = useRef<Color | null | undefined>(color);
+  colorRef.current = color;
+
+  useEffect(() => {
+    if (trigger !== prev.current) {
+      prev.current = trigger;
+      const id = ++beltSlideId;
+      const c = colorRef.current ?? null;
+      setSlides((s) => [...s, { id, color: c }]);
+      const t = setTimeout(() => setSlides((s) => s.filter((x) => x.id !== id)), 850);
+      return () => clearTimeout(t);
+    }
+  }, [trigger]);
+
+  return (
+    <div className="belt" aria-hidden>
+      <div className="belt-tread" />
+      {slides.map((s) => (
+        <span key={s.id} className="belt-item">
+          {kind === 'house' ? (
+            <HouseSvg
+              width={15}
+              height={18}
+              style={{ color: s.color ? COLOR_HEX[s.color] : '#9b6fcf', display: 'block' }}
+            />
+          ) : (
+            <Brick color={s.color} size={15} />
+          )}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function Market() {

@@ -45,6 +45,7 @@ export function makeRoundState(roundIndex: number, prevResults: RoundMetrics[] =
     cooldownMs: i < 3 ? cfg.stationCooldownMs[i] : 0,
     blocked: false,
     justActed: false,
+    produced: 0,
     isPlayer: i === PLAYER_STATION_INDEX,
   }));
 
@@ -127,6 +128,7 @@ export function tick(s: GameState, dt: number): void {
     if (tryProcess(s, i, cfg)) {
       st.cooldownMs = cfg.stationCooldownMs[i];
       st.justActed = true;
+      st.produced++;
     } else {
       st.blocked = true;
       st.cooldownMs = 0; // klaar, maar geblokkeerd: probeer volgende tick opnieuw
