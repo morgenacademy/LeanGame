@@ -9,9 +9,12 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/LeanGame/' : '/',
   plugins: [
     react(),
-    // cleanupIds uit: house-stages.svg heeft id="stage-1..4" die we per bouwfase tonen.
     svgr({
+      // Alleen ?react wordt een React-component; ?url blijft een gewone asset-URL
+      // (nodig voor de tile-textures in background-image).
+      include: '**/*.svg?react',
       svgrOptions: {
+        // house-stages.svg heeft id="stage-1..4" die we per bouwfase tonen: niet strippen.
         svgoConfig: {
           plugins: [{ name: 'preset-default', params: { overrides: { cleanupIds: false } } }],
         },
