@@ -870,12 +870,28 @@ kbd {
   gap: 9px;
   align-items: center;
   justify-content: center;
-  min-height: 66px;
+  min-height: 132px;
   padding: 0.7rem;
   border: 1.5px dashed var(--card-border);
   border-radius: 14px;
   background: rgba(0, 0, 0, 0.22);
   margin-bottom: 0.7rem;
+}
+/* Elke nieuw geplaatste bouwlaag van het huis 'popt' omhoog */
+.hp {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: hp-pop 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.4);
+}
+@keyframes hp-pop {
+  from {
+    opacity: 0;
+    transform: scaleY(0.35) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .slot-ghost {
   width: 36px;

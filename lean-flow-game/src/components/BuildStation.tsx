@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../game/store';
-import { Brick, Pile } from './Brick';
+import { Pile } from './Brick';
 import { COLORS } from '../game/config';
 import { COLOR_HEX, COLOR_LABEL } from '../game/colors';
 import type { Color } from '../game/types';
@@ -79,15 +79,7 @@ export function BuildStation() {
             </div>
 
             <div className={`blueprint dropzone ${shakeAnim ? 'shake' : ''}`}>
-              {Array.from({ length: g.studsPerHouse }).map((_, i) =>
-                i < g.placedBricks ? (
-                  <span key={`f${i}`} className="brick-wrap">
-                    <Brick color={target} size={36} />
-                  </span>
-                ) : (
-                  <span key={`s${i}`} className="slot-ghost" style={{ borderColor: COLOR_HEX[target] }} />
-                )
-              )}
+              <HouseStages stage={g.placedBricks} color={target} size={108} />
             </div>
 
             <div className="tray">
@@ -126,5 +118,36 @@ export function BuildStation() {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Het huis groeit in fases: elke geplaatste steen voegt een bouwlaag toe
+ * (fundering -> muren -> muren+raam -> dak). Eerste-versie in code; later te
+ * vervangen door house-stages.svg met groepen stage-1..stage-4.
+ */
+function HouseStages({ stage, color, size = 100 }: { stage: number; color: Color; size?: number }) {
+  const hex = COLOR_HEX[color];
+  const dark = 'rgba(0,0,0,0.32)';
+  return (
+    <svg viewBox="0 0 80 96" width={size * 0.83} height={size} style={{ display: 'block' }} aria-hidden>
+      {/* bouwtekening-omtrek, altijd zichtbaar */}
+      <g fill="none" stroke={hex} strokeOpacity="0.25" strokeWidth="2" strokeDasharray="3 3">
+        <path d="M40 16 L72 40 H8 Z" />
+        <rect x="16" y="40" width="48" height="44" />
+        <rect x="10" y="84" width="60" height="8" />
+      </g>
+      {/* cumulatieve bouwfases */}
+      {stage >= 1 && <rect className="hp" x="10" y="84" width="60" height="8" fill={dark} />}
+      {stage >= 2 && <rect className="hp" x="16" y="62" width="48" height="22" fill={hex} />}
+      {stage >= 3 && (
+        <g className="hp">
+          <rect x="16" y="40" width="48" height="22" fill={hex} />
+          <rect x="22" y="45" width="11" height="11" fill={dark} />
+          <rect x="35" y="64" width="13" height="20" fill={dark} />
+        </g>
+      )}
+      {stage >= 4 && <path className="hp" d="M40 16 L72 40 H8 Z" fill={hex} />}
+    </svg>
   );
 }
