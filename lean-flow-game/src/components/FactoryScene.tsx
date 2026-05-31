@@ -119,8 +119,6 @@ export function FactoryScene() {
         onPointerMove={updateCursor}
       />
       <PlayerBuildPanel drag={drag} />
-      <FlowStatus mode={g.mode} />
-      <BlockLegend />
       <SceneAnchors />
     </div>
   );
@@ -134,40 +132,6 @@ function PlayerBuildPanel({ drag }: { drag: Drag | null }) {
           <Brick color={drag.color} size={40} />
         </div>
       )}
-    </div>
-  );
-}
-
-function FlowStatus({ mode }: { mode: GameState['mode'] }) {
-  return (
-    <div className="scene-flow-panel">
-      <span>Flow status</span>
-      <div className={`scene-flow-dots ${mode}`}>
-        <i />
-        <b />
-        <i />
-        <b />
-        <i />
-        <b />
-        <i className="final" />
-      </div>
-    </div>
-  );
-}
-
-function BlockLegend() {
-  const counts = { red: 12, blue: 9, yellow: 8, green: 11 } satisfies Record<Color, number>;
-  return (
-    <div className="scene-block-panel">
-      <span>Blocks</span>
-      <div>
-        {COLORS.map((c) => (
-          <strong key={c}>
-            <Brick color={c} size={21} />
-            {String(counts[c]).padStart(2, '0')}
-          </strong>
-        ))}
-      </div>
     </div>
   );
 }
@@ -199,8 +163,9 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
   camera.lookAt(0.1, 0, 0);
 
   const root = new THREE.Group();
-  root.position.y = 0.85;
+  root.position.y = 0.78;
   root.rotation.y = -0.02;
+  root.scale.setScalar(0.94);
   scene.add(root);
 
   const dynamic = new THREE.Group();
@@ -243,8 +208,8 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
     const height = Math.max(420, Math.floor(rect.height));
     renderer.setSize(width, height, false);
     const compact = width < 1200;
-    camera.fov = compact ? 44 : 42;
-    camera.position.set(0.1, compact ? 8.9 : 8.3, compact ? 12.2 : 12.0);
+    camera.fov = compact ? 49 : 42;
+    camera.position.set(0.1, compact ? 9.7 : 8.3, compact ? 13.0 : 12.0);
     camera.lookAt(0.1, 0.65, 0);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();

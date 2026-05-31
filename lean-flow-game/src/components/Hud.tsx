@@ -20,6 +20,9 @@ export function Hud() {
   const hidden = g.mode === 'push' && !g.demandRevealed; // verkoop/winst pas aan het einde
   const liveCost = m.bricksConsumed; // $1 per steen, telt live mee
   const liveProfit = m.revenue - liveCost;
+  // Kleine rekensom eronder, zodat de getallen 'kloppen' i.p.v. magisch zijn.
+  const costSum = `${Math.round(liveCost)} stenen × $1`;
+  const profitSum = hidden ? '?' : `${m.housesSold}×$25 − $${Math.round(liveCost)}`;
 
   return (
     <div className="hud">
@@ -53,11 +56,18 @@ export function Hud() {
       </div>
 
       <div className="hud-stats">
-        <Stat label="Gebouwd" icon="▱" value={m.housesBuilt} />
-        <Stat label="Verkocht" icon="⌂" value={hidden ? '?' : m.housesSold} />
-        <Stat label="WIP" icon="▦" value={wipNow} warn={wipNow >= 6} />
-        <Stat label="Kosten" icon="▱" value={euro(-liveCost)} bad={liveCost > 0} />
-        <Stat label="Winst" icon="€" value={hidden ? '?' : euro(liveProfit)} good={!hidden && liveProfit >= 0} bad={!hidden && liveProfit < 0} />
+        <Stat label="Gebouwd" icon="🏗" value={m.housesBuilt} />
+        <Stat label="Verkocht" icon="🏠" value={hidden ? '?' : m.housesSold} />
+        <Stat label="WIP" icon="📦" value={wipNow} warn={wipNow >= 6} />
+        <Stat label="Kosten" icon="🧱" value={euro(-liveCost)} sub={costSum} bad={liveCost > 0} />
+        <Stat
+          label="Winst"
+          icon="€"
+          value={hidden ? '?' : euro(liveProfit)}
+          sub={profitSum}
+          good={!hidden && liveProfit >= 0}
+          bad={!hidden && liveProfit < 0}
+        />
       </div>
 
       <div className="hud-menu" aria-hidden>☰</div>
@@ -69,6 +79,7 @@ function Stat({
   label,
   icon,
   value,
+  sub,
   warn,
   good,
   bad,
@@ -76,6 +87,7 @@ function Stat({
   label: string;
   icon: string;
   value: string | number;
+  sub?: string;
   warn?: boolean;
   good?: boolean;
   bad?: boolean;
@@ -88,6 +100,7 @@ function Stat({
         <span className="stat-icon" aria-hidden>{icon}</span>
         <span className="stat-value">{value}</span>
       </div>
+      {sub && <div className="stat-sub">{sub}</div>}
     </div>
   );
 }

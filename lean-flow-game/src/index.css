@@ -2200,6 +2200,15 @@ body::before {
   color: var(--accent);
 }
 
+.stat-sub {
+  margin-top: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(244, 248, 255, 0.5);
+  white-space: nowrap;
+}
+
 .hud-menu {
   display: grid;
   place-items: center;
@@ -2980,8 +2989,8 @@ body::before {
 .factory-scene-shell::after {
   z-index: 2;
   background:
-    radial-gradient(ellipse 72% 48% at 50% 52%, transparent 54%, rgba(0, 0, 0, 0.52) 100%),
-    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+    radial-gradient(ellipse 76% 52% at 50% 52%, transparent 58%, rgba(0, 0, 0, 0.28) 100%),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px);
   background-size: 100% 100%, 100% 3px;
   mix-blend-mode: normal;
 }
