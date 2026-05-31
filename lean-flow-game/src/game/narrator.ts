@@ -31,7 +31,7 @@ export function narrate(g: GameState): NarratorLine | null {
     // Begeleide start
     if (built === 0 && !holding && d === 0 && g.elapsedMs < 9000)
       return line('p-welcome', 'Welkom op de werkvloer. Jij bent de bouwer. Zo komt je eerste set binnen…', 'guide');
-    if (built === 0 && holding)
+    if (built === 0 && (holding || d > 0))
       return line('p-place', 'Bouw dit huis: sleep onderdelen uit jouw set naar de bouwvakken.', 'guide');
     if (built === 1 && recentBuild)
       return line('p-first', 'Je eerste huis! Het ging naar de markt. Maar… weet je eigenlijk wélke kleur de klant wil?', 'cheer');
@@ -51,7 +51,7 @@ export function narrate(g: GameState): NarratorLine | null {
     return line('q-rules', `Nieuwe regels. Maak alléén wat de klant vraagt: ${demand}.`, 'calm');
   if (!holding && d === 0)
     return line('q-wait', 'Even niets te doen? Dat mág. Je wacht op een signaal, het werk stroomt nog steeds.', 'calm');
-  if (holding) return line('q-place', 'Sleep onderdelen naar de bouwvakken; dit huis is verkocht zodra het af is.', 'guide');
+  if (holding || d > 0) return line('q-place', 'Sleep onderdelen naar de bouwvakken; dit huis is verkocht zodra het af is.', 'guide');
   if (recentBuild) return line('q-sold', 'Verkocht. Geen voorraad, geen verspilling.', 'cheer');
   return line('q-calm', 'Rustig, op het ritme van de klant. Merk je hoeveel kalmer het is?', 'calm');
 }

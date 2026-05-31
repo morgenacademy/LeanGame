@@ -6,7 +6,6 @@ import { COLORS, RAW_SUPPLY } from '../game/config';
 import { COLOR_HEX, COLOR_LABEL } from '../game/colors';
 import type { BuiltHouse, Color, GameState, Unit } from '../game/types';
 import { Brick } from './Brick';
-import { HouseStagesSvg } from './icons';
 
 interface Drag {
   color: Color;
@@ -37,6 +36,20 @@ const STATION_LAYOUT = [
   { x: 3.45, z: -0.08, label: 'BOUW', icon: 'PLAYER' },
   { x: 6.75, z: 0.05, label: 'MARKT', icon: 'CART' },
 ] as const;
+
+const PLAYER_STOCK = {
+  activeX: -0.72,
+  queueX: -0.18,
+  z: 0.2,
+  y: 0.72,
+} as const;
+
+const PLAYER_BUILD = {
+  z: 1.24,
+  slotY: 0.56,
+  cubeY: 0.53,
+  houseY: 0.36,
+} as const;
 
 export function FactoryScene() {
   const g = useGame((s) => s.g);
@@ -105,7 +118,7 @@ export function FactoryScene() {
         onPointerDown={startDrag}
         onPointerMove={updateCursor}
       />
-      <PlayerBuildPanel g={g} drag={drag} />
+      <PlayerBuildPanel drag={drag} />
       <FlowStatus mode={g.mode} />
       <BlockLegend />
       <SceneAnchors />
@@ -113,60 +126,14 @@ export function FactoryScene() {
   );
 }
 
-function PlayerBuildPanel({ g, drag }: { g: GameState; drag: Drag | null }) {
-  const holding = g.holding;
-  const target = holding?.color ?? null;
-  const inventoryCount = (holding ? 1 : 0) + g.stations[3].buffer.length;
-  const remainingParts = holding ? Math.max(0, g.studsPerHouse - g.placedBricks) : 0;
-
+function PlayerBuildPanel({ drag }: { drag: Drag | null }) {
   return (
-    <div className="scene-player-panel player-station">
-      <div className="scene-panel-head">
-        <span className="scene-panel-icon">♙</span>
-        <span>Bouw</span>
-        <strong>JIJ</strong>
-      </div>
-
-      {holding && target ? (
-        <>
-          <div className="scene-build-line">
-            <SceneBuildBlueprint color={target} stage={g.placedBricks} />
-            <div className="scene-build-copy">
-              <div className="scene-build-title">
-                <span>Bouw dit huis:</span>
-                <span className="scene-swatch" style={{ background: COLOR_HEX[target] }} />
-                <strong>{COLOR_LABEL[target]}</strong>
-                <span>
-                  {g.placedBricks}/{g.studsPerHouse}
-                </span>
-              </div>
-              <div className="scene-build-hint">
-                {remainingParts > 0
-                  ? `${remainingParts} ${remainingParts === 1 ? 'onderdeel' : 'onderdelen'} over in deze set`
-                  : 'huis klaar, naar de markt'}
-              </div>
-            </div>
-          </div>
-          <div className="scene-tray-label">sets bij bouwstation: {inventoryCount}</div>
-        </>
-      ) : (
-        <div className="scene-waiting">Wachten op materiaal</div>
-      )}
-
+    <div className="scene-player-panel">
       {drag && (
         <div className="drag-ghost scene-drag-ghost" style={{ left: drag.x, top: drag.y }}>
           <Brick color={drag.color} size={40} />
         </div>
       )}
-    </div>
-  );
-}
-
-function SceneBuildBlueprint({ color, stage }: { color: Color; stage: number }) {
-  return (
-    <div className="scene-blueprint-art house-stages-wrap" style={{ color: COLOR_HEX[color] }}>
-      <HouseStagesSvg className="house-ghost" />
-      <HouseStagesSvg key={stage} className={`house-built s${stage}`} />
     </div>
   );
 }
@@ -431,6 +398,9 @@ function latestSetColor(g: GameState): Color {
 }
 
 function segmentStart(index: number) {
+  if (index === 3) {
+    return new THREE.Vector3(STATION_LAYOUT[3].x + 0.25, PLAYER_BUILD.houseY, PLAYER_BUILD.z);
+  }
   const starts = [
     STATION_LAYOUT[0].x + 1.05,
     STATION_LAYOUT[1].x + 1.05,
@@ -441,6 +411,14 @@ function segmentStart(index: number) {
 }
 
 function segmentEnd(index: number) {
+  if (index === 2) {
+    return new THREE.Vector3(
+      STATION_LAYOUT[3].x + PLAYER_STOCK.activeX,
+      PLAYER_STOCK.y,
+      PLAYER_STOCK.z
+    );
+  }
+  if (index === 3) return new THREE.Vector3(STATION_LAYOUT[4].x - 1.1, PLAYER_BUILD.houseY, PLAYER_BUILD.z);
   const ends = [
     STATION_LAYOUT[1].x - 1.05,
     STATION_LAYOUT[2].x - 1.05,
@@ -703,18 +681,18 @@ function createBuildWorkbench(root: THREE.Group, x: number, dropHitMeshes: THREE
   addSurfaceGrid(group, 2.08, 1.05, 0.545, 0.48, 0x6f8d20);
 
   for (let i = 0; i < 4; i++) {
-    createSlotFrame(group, -0.57 + i * 0.38, 0.78, 0.42);
+    createSlotFrame(group, -0.57 + i * 0.38, PLAYER_BUILD.slotY, PLAYER_BUILD.z);
   }
 
   const inputRail = new THREE.Mesh(
     new THREE.BoxGeometry(1.22, 0.055, 0.1),
     new THREE.MeshStandardMaterial({ color: 0xd8fe56, roughness: 0.35, metalness: 0.2 })
   );
-  inputRail.position.set(-0.52, 0.65, 1.08);
+  inputRail.position.set(PLAYER_STOCK.activeX + 0.08, 0.65, PLAYER_STOCK.z);
   group.add(inputRail);
 
   const bufferRail = inputRail.clone();
-  bufferRail.position.set(0.58, 0.65, 1.08);
+  bufferRail.position.set(PLAYER_STOCK.queueX + 0.48, 0.65, PLAYER_STOCK.z);
   bufferRail.material = new THREE.MeshStandardMaterial({
     color: 0x9aa3a8,
     roughness: 0.4,
@@ -722,8 +700,8 @@ function createBuildWorkbench(root: THREE.Group, x: number, dropHitMeshes: THREE
   });
   group.add(bufferRail);
 
-  const drop = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.18, 0.55), hitMat);
-  drop.position.set(0, 0.68, 0.42);
+  const drop = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.62, 0.9), hitMat);
+  drop.position.set(0, 0.66, PLAYER_BUILD.z);
   group.add(drop);
   dropHitMeshes.push(drop);
 }
@@ -830,15 +808,16 @@ function rebuildDynamic(dynamic: THREE.Group, g: GameState, inventoryHitMeshes: 
   });
   addPlayerInventory(dynamic, g, inventoryHitMeshes);
   addBuildCue(dynamic, g);
+  addBuildStatus(dynamic, g);
 
   if (g.holding?.color && g.houseCompleteAtMs != null) {
     const house = createHouseMesh(g.holding.color, 0.82);
-    house.position.set(STATION_LAYOUT[3].x - 0.12, 0.75, 0.42);
+    house.position.set(STATION_LAYOUT[3].x + 0.05, PLAYER_BUILD.houseY, PLAYER_BUILD.z);
     dynamic.add(house);
   } else if (g.holding?.color) {
     for (let i = 0; i < g.placedBricks; i++) {
       const cube = createCubeMesh(COLOR_HEX[g.holding.color], 0.34);
-      cube.position.set(STATION_LAYOUT[3].x - 0.57 + i * 0.38, 0.74, 0.42);
+      cube.position.set(STATION_LAYOUT[3].x - 0.57 + i * 0.38, PLAYER_BUILD.cubeY, PLAYER_BUILD.z);
       dynamic.add(cube);
     }
   }
@@ -849,25 +828,25 @@ function rebuildDynamic(dynamic: THREE.Group, g: GameState, inventoryHitMeshes: 
 
 function addPlayerInventory(group: THREE.Group, g: GameState, inventoryHitMeshes: THREE.Mesh[]) {
   const stationX = STATION_LAYOUT[3].x;
-  const active = g.holding;
-  const queued = g.stations[3].buffer.slice(0, 5);
+  const active = g.holding ?? g.stations[3].buffer[0] ?? null;
+  const queued = (g.holding ? g.stations[3].buffer : g.stations[3].buffer.slice(1)).slice(0, 5);
 
   queued.forEach((item, i) => {
     const color = item.color ?? g.demandColor ?? COLORS[0];
     const pack = createSetPack(color, 0.58);
     const row = Math.floor(i / 3);
     const col = i % 3;
-    pack.position.set(stationX + 0.26 + col * 0.34, 0.7, 1.0 - row * 0.3);
+    pack.position.set(stationX + PLAYER_STOCK.queueX + col * 0.34, 0.7, PLAYER_STOCK.z - row * 0.3);
     pack.rotation.y = 0.08;
     group.add(pack);
   });
 
   if (!active?.color) return;
 
-  const remaining = Math.max(0, g.studsPerHouse - g.placedBricks);
+  const remaining = g.holding ? Math.max(0, g.studsPerHouse - g.placedBricks) : g.studsPerHouse;
   if (remaining > 0) {
     const pack = createSetPack(active.color, 0.9, remaining);
-    pack.position.set(stationX - 0.58, 0.72, 1.02);
+    pack.position.set(stationX + PLAYER_STOCK.activeX, PLAYER_STOCK.y, PLAYER_STOCK.z);
     pack.rotation.y = -0.06;
     group.add(pack);
   }
@@ -875,10 +854,10 @@ function addPlayerInventory(group: THREE.Group, g: GameState, inventoryHitMeshes
   if (remaining === 0 || g.houseCompleteAtMs != null) return;
 
   const hit = new THREE.Mesh(
-    new THREE.BoxGeometry(1.35, 0.72, 0.74),
+    new THREE.BoxGeometry(1.72, 0.92, 1.0),
     new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })
   );
-  hit.position.set(stationX - 0.58, 0.78, 1.02);
+  hit.position.set(stationX + PLAYER_STOCK.activeX, 0.78, PLAYER_STOCK.z);
   hit.userData.color = active.color;
   group.add(hit);
   inventoryHitMeshes.push(hit);
@@ -906,14 +885,15 @@ function addStationPulse(group: THREE.Group, index: number) {
 }
 
 function addBuildCue(group: THREE.Group, g: GameState) {
-  if (!g.holding?.color || g.houseCompleteAtMs != null) return;
-  const remaining = Math.max(0, g.studsPerHouse - g.placedBricks);
+  const active = g.holding ?? g.stations[3].buffer[0] ?? null;
+  if (!active?.color || g.houseCompleteAtMs != null) return;
+  const remaining = g.holding ? Math.max(0, g.studsPerHouse - g.placedBricks) : g.studsPerHouse;
   if (remaining === 0) return;
 
   const stationX = STATION_LAYOUT[3].x;
   const nextSlotX = stationX - 0.57 + Math.min(g.placedBricks, g.studsPerHouse - 1) * 0.38;
-  const source = new THREE.Vector3(stationX - 0.58, 0.9, 0.86);
-  const target = new THREE.Vector3(nextSlotX, 0.9, 0.42);
+  const source = new THREE.Vector3(stationX + PLAYER_STOCK.activeX, 0.9, PLAYER_STOCK.z);
+  const target = new THREE.Vector3(nextSlotX, 0.76, PLAYER_BUILD.z);
   const pulse = 0.55 + Math.sin(g.elapsedMs / 180) * 0.22;
   const mat = new THREE.LineBasicMaterial({
     color: 0xd8fe56,
@@ -937,6 +917,19 @@ function addBuildCue(group: THREE.Group, g: GameState) {
   targetRing.position.copy(target);
   targetRing.rotation.x = Math.PI / 2;
   group.add(targetRing);
+}
+
+function addBuildStatus(group: THREE.Group, g: GameState) {
+  const active = g.holding ?? g.stations[3].buffer[0] ?? null;
+  if (!active?.color) return;
+  const texture = makeBuildStatusTexture(active.color, g.holding ? g.placedBricks : 0, g.studsPerHouse);
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.4, 0.48),
+    new THREE.MeshBasicMaterial({ map: texture, transparent: true })
+  );
+  sign.position.set(STATION_LAYOUT[3].x - 0.34, 1.08, 0.0);
+  sign.rotation.x = -0.18;
+  group.add(sign);
 }
 
 function rawItems(count: number): Unit[] {
@@ -1018,6 +1011,8 @@ function addHouseCluster(
 }
 
 function addMarketDemand(group: THREE.Group, g: GameState) {
+  if (g.phase !== 'playing') return;
+
   const bubble = createDemandBubble(g.demandRevealed ? g.demandColor : null);
   bubble.position.set(STATION_LAYOUT[4].x + 0.55, 1.62, -0.58);
   bubble.rotation.x = -0.08;
@@ -1272,6 +1267,35 @@ function makeDemandTexture(color: Color | null) {
     ctx.font = '900 112px system-ui, sans-serif';
     ctx.fillText('?', 256, 188);
   }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function makeBuildStatusTexture(color: Color, placed: number, total: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 176;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.78)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = 'rgba(216,254,86,0.86)';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+
+  ctx.fillStyle = '#d8fe56';
+  ctx.font = '900 34px system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('BOUW', 34, 58);
+
+  ctx.fillStyle = COLOR_HEX[color];
+  ctx.fillRect(34, 86, 34, 34);
+  ctx.fillStyle = '#f4f8ff';
+  ctx.font = '900 42px system-ui, sans-serif';
+  ctx.fillText(`${COLOR_LABEL[color]} ${placed}/${total}`, 84, 116);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;

@@ -145,7 +145,8 @@ export function tick(s: GameState, dt: number): void {
   }
 
   // Dak-moment: een compleet huis blijft heel even staan (met dak) en schuift
-  // daarna pas naar de markt. Pas dán pakt de bouwer de volgende set.
+  // daarna pas naar de markt. De volgende set blijft zichtbaar in de voorraad
+  // totdat de speler die zelf oppakt.
   if (s.houseCompleteAtMs != null && s.elapsedMs - s.houseCompleteAtMs >= HOUSE_HOLD_MS) {
     shipHouse(s);
   }
@@ -165,13 +166,6 @@ export function tick(s: GameState, dt: number): void {
     if (s.holding && s.houseCompleteAtMs == null) s.holding.color = next;
   }
 
-  // Auto-grab: zodra de bouwer vrij is (en geen huis in de dak-pauze) pakt hij de
-  // volgende set, als die klaarligt.
-  if (!s.holding && s.houseCompleteAtMs == null && s.stations[3].buffer.length > 0) {
-    s.holding = s.stations[3].buffer.shift()!;
-    s.placedBricks = 0;
-  }
-
   const wipNow =
     s.stations[1].buffer.length +
     s.stations[2].buffer.length +
@@ -189,8 +183,15 @@ export function tick(s: GameState, dt: number): void {
  */
 export function placeBrick(s: GameState, color: Color): void {
   if (s.phase !== 'playing' || !s.running) return;
-  if (!s.holding) return;
   if (s.houseCompleteAtMs != null) return; // huis is af en wacht op de markt
+
+  if (!s.holding) {
+    const nextSet = s.stations[3].buffer.shift();
+    if (!nextSet) return;
+    s.holding = nextSet;
+    s.placedBricks = 0;
+  }
+
   if (color === s.holding.color) {
     s.placedBricks++;
     // Laatste steen: huis is compleet (dak erop). Het blijft even staan en schuift
@@ -229,7 +230,7 @@ function shipHouse(s: GameState): void {
   s.holding = null;
   s.placedBricks = 0;
   s.houseCompleteAtMs = null;
-  // Volgende set wordt door de tick (auto-grab) opgepakt.
+  // De volgende set blijft in de voorraad tot de speler die zelf oppakt.
 }
 
 function endRound(s: GameState): void {
