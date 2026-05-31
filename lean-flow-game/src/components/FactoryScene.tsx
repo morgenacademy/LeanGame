@@ -760,6 +760,49 @@ function createMarketStall(root: THREE.Group, x: number) {
   const truck = createDeliveryTruck();
   truck.position.set(x + 0.55, 0.52, -0.5);
   root.add(truck);
+
+  // Magazijn-pallet vóór de markt: hier stapelen ONVERKOCHTE huizen op (overproductie).
+  // Verkochte huizen rijden weg met de truck; wat blijft liggen = dode voorraad.
+  const pallet = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 0.06, 0.92),
+    new THREE.MeshStandardMaterial({ color: 0x1a1410, roughness: 0.7, metalness: 0.1 })
+  );
+  pallet.position.set(x - 0.18, 0.27, 0.42);
+  pallet.receiveShadow = true;
+  root.add(pallet);
+  addEdges(pallet, 0xff6b6b);
+
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.16, 0.4),
+    new THREE.MeshBasicMaterial({ map: makeWarehouseTexture(), transparent: true })
+  );
+  sign.position.set(x - 0.18, 0.86, -0.02);
+  sign.rotation.x = -0.12;
+  root.add(sign);
+}
+
+function makeWarehouseTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 384;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(255,107,107,0.16)';
+  roundedRect(ctx, 6, 6, canvas.width - 12, canvas.height - 12, 18);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,107,107,0.7)';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  ctx.fillStyle = '#ff8f8f';
+  ctx.font = '900 44px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('MAGAZIJN', 192, 58);
+  ctx.fillStyle = 'rgba(244,248,255,0.72)';
+  ctx.font = '700 26px system-ui, sans-serif';
+  ctx.fillText('onverkochte voorraad', 192, 96);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 function createSign(root: THREE.Group, x: number, z: number, label: string, icon: string) {
@@ -822,8 +865,37 @@ function rebuildDynamic(dynamic: THREE.Group, g: GameState, inventoryHitMeshes: 
     }
   }
 
-  addHouseCluster(dynamic, STATION_LAYOUT[4].x - 0.18, 0.12, g.built.filter((h) => !h.sold).slice(-6), 6, 3);
+  // Onverkochte huizen stapelen op het magazijn-pallet (overproductie zichtbaar).
+  const unsold = g.built.filter((h) => !h.sold);
+  addHouseCluster(dynamic, STATION_LAYOUT[4].x - 0.18, 0.42, unsold.slice(-9), 9, 3);
+  if (unsold.length > 0) addWarehouseCount(dynamic, STATION_LAYOUT[4].x - 0.18, unsold.length);
   addMarketDemand(dynamic, g);
+}
+
+function addWarehouseCount(group: THREE.Group, x: number, count: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, 128, 128);
+  ctx.fillStyle = '#ff6b6b';
+  ctx.beginPath();
+  ctx.arc(64, 64, 56, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#1a0e0e';
+  ctx.font = '900 72px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(count), 64, 70);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const badge = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.34, 0.34),
+    new THREE.MeshBasicMaterial({ map: tex, transparent: true })
+  );
+  badge.position.set(x + 0.66, 1.04, 0.42);
+  badge.rotation.x = -0.1;
+  group.add(badge);
 }
 
 function addPlayerInventory(group: THREE.Group, g: GameState, inventoryHitMeshes: THREE.Mesh[]) {
@@ -1012,17 +1084,19 @@ function addHouseCluster(
 
 function addMarketDemand(group: THREE.Group, g: GameState) {
   if (g.phase !== 'playing') return;
+  // Push (ronde 1): de klant verklapt zijn kleur NIET. Speler moet zelf
+  // ontdekken dat hij blind bouwt ("maar welke kleur wil de klant?"). Pas in
+  // pull verschijnt de vraag-bubble. Discovery, niet voorzeggen.
+  if (!g.demandRevealed || !g.demandColor) return;
 
-  const bubble = createDemandBubble(g.demandRevealed ? g.demandColor : null);
+  const bubble = createDemandBubble(g.demandColor);
   bubble.position.set(STATION_LAYOUT[4].x + 0.55, 1.62, -0.58);
   bubble.rotation.x = -0.08;
   group.add(bubble);
 
-  if (g.demandRevealed && g.demandColor) {
-    const sample = createHouseMesh(g.demandColor, 0.36);
-    sample.position.set(STATION_LAYOUT[4].x + 0.52, 0.92, -0.58);
-    group.add(sample);
-  }
+  const sample = createHouseMesh(g.demandColor, 0.36);
+  sample.position.set(STATION_LAYOUT[4].x + 0.52, 0.92, -0.58);
+  group.add(sample);
 }
 
 function createRawPiece(scale = 1) {
