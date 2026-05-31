@@ -185,9 +185,9 @@ function SceneAnchors() {
 }
 
 function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement): SceneRuntime {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0x05070a, 1);
+  renderer.setClearColor(0x05070a, 0);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -217,9 +217,9 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
 
   buildStaticScene(root, beltTexture, beltMats, robot, dropHitMeshes);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.68);
   scene.add(ambient);
-  const key = new THREE.DirectionalLight(0xffffff, 2.2);
+  const key = new THREE.DirectionalLight(0xffffff, 2.45);
   key.position.set(-5, 9, 5);
   key.castShadow = true;
   key.shadow.camera.near = 1;
@@ -229,6 +229,9 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
   const rim = new THREE.PointLight(0xd8fe56, 2.6, 10);
   rim.position.set(4.2, 2.6, 1.2);
   scene.add(rim);
+  const dockGlow = new THREE.PointLight(0xffd188, 1.8, 7);
+  dockGlow.position.set(6.6, 2.2, -2.7);
+  scene.add(dockGlow);
 
   let currentState: GameState | null = null;
   let raf = 0;
@@ -297,9 +300,17 @@ function buildStaticScene(
   robot: THREE.Group,
   dropHitMeshes: THREE.Mesh[]
 ) {
+  createFactoryBackdrop(root);
+
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(28, 16),
-    new THREE.MeshStandardMaterial({ color: 0x14181b, roughness: 0.82, metalness: 0.08 })
+    new THREE.MeshStandardMaterial({
+      color: 0x0d1115,
+      roughness: 0.82,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 0.82,
+    })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
@@ -326,6 +337,167 @@ function buildStaticScene(
   createPlatform(root, STATION_LAYOUT[4].x, STATION_LAYOUT[4].z, 2.45, 2.05, false);
   createSign(root, STATION_LAYOUT[4].x, 0.2, 'MARKT', 'CART');
   createMarketStall(root, STATION_LAYOUT[4].x);
+}
+
+function createFactoryBackdrop(root: THREE.Group) {
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0x090d10,
+    roughness: 0.78,
+    metalness: 0.18,
+    transparent: true,
+    opacity: 0.82,
+  });
+  const trimMat = new THREE.MeshStandardMaterial({ color: 0x1a2024, roughness: 0.5, metalness: 0.36 });
+  const accentMat = new THREE.MeshStandardMaterial({
+    color: 0xd8fe56,
+    roughness: 0.38,
+    metalness: 0.28,
+    emissive: 0x435500,
+    emissiveIntensity: 0.22,
+  });
+  const warmLightMat = new THREE.MeshStandardMaterial({
+    color: 0xffd38a,
+    roughness: 0.25,
+    emissive: 0xffb34e,
+    emissiveIntensity: 1.2,
+  });
+
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(19.5, 4.2), wallMat);
+  wall.position.set(0, 2.15, -5.85);
+  wall.receiveShadow = true;
+  root.add(wall);
+
+  for (const x of [-8.4, -5.4, -2.4, 0.6, 3.6, 6.6, 8.6]) {
+    const column = new THREE.Mesh(new THREE.BoxGeometry(0.18, 3.9, 0.2), trimMat);
+    column.position.set(x, 2.03, -5.68);
+    column.castShadow = true;
+    column.receiveShadow = true;
+    root.add(column);
+
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.09, 0.23), accentMat);
+    band.position.set(x, 2.98, -5.54);
+    root.add(band);
+  }
+
+  for (const y of [0.74, 1.62, 3.42]) {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(18.8, 0.08, 0.14), trimMat);
+    beam.position.set(0, y, -5.52);
+    beam.castShadow = true;
+    root.add(beam);
+  }
+
+  const gantry = new THREE.Mesh(new THREE.BoxGeometry(17.4, 0.1, 0.14), trimMat);
+  gantry.position.set(0, 4.12, -4.52);
+  gantry.castShadow = true;
+  root.add(gantry);
+
+  const gantryAccent = new THREE.Mesh(new THREE.BoxGeometry(17.4, 0.035, 0.045), accentMat);
+  gantryAccent.position.set(0, 4.02, -4.42);
+  root.add(gantryAccent);
+
+  for (const x of [-5.8, -1.9, 2.0, 5.9]) {
+    const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.28, 0.12, 24), warmLightMat);
+    lamp.position.set(x, 3.72, -4.26);
+    lamp.rotation.x = Math.PI;
+    root.add(lamp);
+
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(0.85, 1.55, 32, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0xffd38a, transparent: true, opacity: 0.055, depthWrite: false })
+    );
+    cone.position.set(x, 2.94, -4.25);
+    cone.rotation.x = Math.PI;
+    root.add(cone);
+  }
+
+  createBackShelf(root, -6.35, -5.28);
+  createBackShelf(root, -3.95, -5.28);
+  createDockDoor(root, 6.75, -5.5);
+  createForegroundRail(root);
+}
+
+function createBackShelf(root: THREE.Group, x: number, z: number) {
+  const metal = new THREE.MeshStandardMaterial({ color: 0x151b20, roughness: 0.55, metalness: 0.42 });
+  const boxMats = [0x4a3f31, 0x22324a, 0x283d2d, 0x5b3b2b].map(
+    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.04 })
+  );
+  const shelf = new THREE.Group();
+  shelf.position.set(x, 0.86, z);
+  root.add(shelf);
+
+  for (const y of [0, 0.42, 0.84]) {
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.05, 0.34), metal);
+    plank.position.y = y;
+    shelf.add(plank);
+  }
+  for (const sx of [-0.68, 0.68]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.9, 0.06), metal);
+    post.position.set(sx, 0.42, 0);
+    shelf.add(post);
+  }
+  for (let i = 0; i < 8; i++) {
+    const crate = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.16, 0.22), boxMats[i % boxMats.length]);
+    crate.position.set(-0.48 + (i % 4) * 0.32, 0.13 + Math.floor(i / 4) * 0.42, -0.02);
+    crate.castShadow = true;
+    shelf.add(crate);
+    addEdges(crate, 0x050607);
+  }
+}
+
+function createDockDoor(root: THREE.Group, x: number, z: number) {
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x20282d, roughness: 0.48, metalness: 0.45 });
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0x11171b, roughness: 0.62, metalness: 0.2 });
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0xb7d7ff, transparent: true, opacity: 0.12, depthWrite: false });
+  const hazardMat = new THREE.MeshStandardMaterial({
+    color: 0xd8fe56,
+    roughness: 0.42,
+    metalness: 0.18,
+    emissive: 0x334400,
+    emissiveIntensity: 0.12,
+  });
+
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.7), glowMat);
+  glow.position.set(x, 1.62, z + 0.03);
+  root.add(glow);
+
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.25, 1.5, 0.08), doorMat);
+  door.position.set(x, 1.42, z + 0.08);
+  door.castShadow = true;
+  root.add(door);
+  addEdges(door, 0x41505a);
+
+  for (const y of [0.95, 1.18, 1.41, 1.64, 1.87]) {
+    const slat = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.025, 0.095), frameMat);
+    slat.position.set(x, y, z + 0.14);
+    root.add(slat);
+  }
+  for (const sx of [-1.25, 1.25]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.82, 0.12), frameMat);
+    post.position.set(x + sx, 1.48, z + 0.16);
+    root.add(post);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.32, 0.13), hazardMat);
+    stripe.position.set(x + sx, 0.67, z + 0.2);
+    root.add(stripe);
+  }
+}
+
+function createForegroundRail(root: THREE.Group) {
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x10161a, roughness: 0.42, metalness: 0.5 });
+  const accentMat = new THREE.MeshStandardMaterial({
+    color: 0xd8fe56,
+    roughness: 0.4,
+    metalness: 0.2,
+    emissive: 0x354500,
+    emissiveIntensity: 0.18,
+  });
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(14.8, 0.07, 0.08), railMat);
+  rail.position.set(-0.7, 0.62, 4.18);
+  root.add(rail);
+  for (let i = 0; i < 17; i++) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.36, 0.06), i % 4 === 0 ? accentMat : railMat);
+    post.position.set(-7.9 + i * 0.92, 0.42, 4.18);
+    root.add(post);
+  }
 }
 
 function raycast(
@@ -383,7 +555,7 @@ function enqueueProcessTransfers(
       marketPickupStart(),
       marketPickupEnd(),
       now + (justBuiltIds.has(house.id) ? 0.95 : 0.15),
-      1.35
+      1.9
     );
   }
 }
@@ -429,11 +601,13 @@ function segmentEnd(index: number) {
 }
 
 function marketPickupStart() {
-  return new THREE.Vector3(STATION_LAYOUT[4].x + 0.15, 0.55, 0.52);
+  // Begint bij het magazijn (links) waar het huis lag.
+  return new THREE.Vector3(STATION_LAYOUT[4].x - 0.5, 0.55, 0.52);
 }
 
 function marketPickupEnd() {
-  return new THREE.Vector3(STATION_LAYOUT[4].x + 2.5, 0.55, -0.42);
+  // Rijdt door naar de WIJK (rechts): het huis wordt geleverd aan de klant.
+  return new THREE.Vector3(STATION_LAYOUT[4].x + 2.55, 0.55, -0.12);
 }
 
 function addTransfer(
@@ -737,69 +911,114 @@ function addSurfaceGrid(group: THREE.Group, w: number, d: number, y: number, zCe
 }
 
 function createMarketStall(root: THREE.Group, x: number) {
+  const dockMat = new THREE.MeshStandardMaterial({ color: 0x07090c, roughness: 0.48, metalness: 0.26 });
+  const accentMat = new THREE.MeshStandardMaterial({
+    color: 0xd8fe56,
+    roughness: 0.36,
+    metalness: 0.18,
+    emissive: 0x314000,
+    emissiveIntensity: 0.18,
+  });
+
+  const dock = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.12, 1.18), dockMat);
+  dock.position.set(x + 0.48, 0.42, -0.5);
+  dock.castShadow = true;
+  dock.receiveShadow = true;
+  root.add(dock);
+  addEdges(dock, 0xd8fe56);
+
+  const dockLine = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.025, 0.04), accentMat);
+  dockLine.position.set(x + 0.48, 0.5, 0.05);
+  root.add(dockLine);
+
+  for (const sx of [-0.82, 0.82]) {
+    const bollard = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.34, 16), accentMat);
+    bollard.position.set(x + 0.48 + sx, 0.66, 0.04);
+    root.add(bollard);
+  }
+
   const canopy = new THREE.Group();
-  canopy.position.set(x + 0.45, 0.84, 0.68);
+  canopy.position.set(x + 0.44, 0.86, 0.58);
   root.add(canopy);
   for (let i = 0; i < 6; i++) {
     const stripe = new THREE.Mesh(
-      new THREE.BoxGeometry(0.24, 0.08, 0.8),
+      new THREE.BoxGeometry(0.24, 0.08, 0.72),
       new THREE.MeshStandardMaterial({ color: i % 2 === 0 ? 0xd8fe56 : 0xf5f8fb, roughness: 0.55 })
     );
     stripe.position.x = (i - 2.5) * 0.24;
     canopy.add(stripe);
   }
 
-  const bay = new THREE.Mesh(
-    new THREE.BoxGeometry(1.38, 0.035, 0.78),
-    new THREE.MeshStandardMaterial({ color: 0x050708, roughness: 0.5, metalness: 0.22 })
-  );
-  bay.position.set(x + 0.5, 0.49, -0.5);
-  root.add(bay);
-  addEdges(bay, 0xd8fe56);
+  // Geen statische truck meer: de truck verschijnt alleen als ANIMATIE bij een
+  // verkoop (createPickupTruck) en rijdt naar de wijk. Anders lijkt het alsof er
+  // niets gebeurt.
 
-  const truck = createDeliveryTruck();
-  truck.position.set(x + 0.55, 0.52, -0.5);
-  root.add(truck);
-
-  // Magazijn-pallet vóór de markt: hier stapelen ONVERKOCHTE huizen op (overproductie).
-  // Verkochte huizen rijden weg met de truck; wat blijft liggen = dode voorraad.
+  // MAGAZIJN-pallet (links, ROOD): ONVERKOCHTE huizen stapelen hier op = overproductie.
   const pallet = new THREE.Mesh(
-    new THREE.BoxGeometry(1.5, 0.06, 0.92),
+    new THREE.BoxGeometry(1.42, 0.06, 0.92),
     new THREE.MeshStandardMaterial({ color: 0x1a1410, roughness: 0.7, metalness: 0.1 })
   );
-  pallet.position.set(x - 0.18, 0.27, 0.42);
+  pallet.position.set(x - 0.5, 0.27, 0.52);
   pallet.receiveShadow = true;
   root.add(pallet);
   addEdges(pallet, 0xff6b6b);
 
-  const sign = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.16, 0.4),
-    new THREE.MeshBasicMaterial({ map: makeWarehouseTexture(), transparent: true })
+  const warehouseSign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.12, 0.4),
+    new THREE.MeshBasicMaterial({ map: makeZoneTexture('MAGAZIJN', 'onverkocht', 0xff6b6b), transparent: true })
   );
-  sign.position.set(x - 0.18, 0.86, -0.02);
-  sign.rotation.x = -0.12;
-  root.add(sign);
+  warehouseSign.position.set(x - 0.5, 0.92, 0.08);
+  warehouseSign.rotation.x = -0.12;
+  root.add(warehouseSign);
+
+  // WIJK-grond (rechts, GROEN): VERKOCHTE huizen worden hier geleverd = waarde.
+  const ground = new THREE.Mesh(
+    new THREE.BoxGeometry(2.1, 0.06, 1.24),
+    new THREE.MeshStandardMaterial({ color: 0x0c160c, roughness: 0.72, metalness: 0.08 })
+  );
+  ground.position.set(x + 2.55, 0.27, -0.12);
+  ground.receiveShadow = true;
+  root.add(ground);
+  addEdges(ground, 0xd8fe56);
+
+  const street = new THREE.Mesh(
+    new THREE.BoxGeometry(2.1, 0.012, 0.34),
+    new THREE.MeshStandardMaterial({ color: 0x222c22, roughness: 0.85 })
+  );
+  street.position.set(x + 2.55, 0.305, -0.12);
+  root.add(street);
+
+  const districtSign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.12, 0.4),
+    new THREE.MeshBasicMaterial({ map: makeZoneTexture('WIJK', 'verkocht & geleverd', 0xd8fe56), transparent: true })
+  );
+  districtSign.position.set(x + 2.55, 0.92, -0.72);
+  districtSign.rotation.x = -0.12;
+  root.add(districtSign);
 }
 
-function makeWarehouseTexture() {
+function makeZoneTexture(title: string, sub: string, accent: number) {
+  const col = new THREE.Color(accent);
+  const r = Math.round(col.r * 255), g = Math.round(col.g * 255), b = Math.round(col.b * 255);
+  const hex = `rgb(${r},${g},${b})`;
   const canvas = document.createElement('canvas');
   canvas.width = 384;
   canvas.height = 128;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(255,107,107,0.16)';
+  ctx.fillStyle = `rgba(${r},${g},${b},0.16)`;
   roundedRect(ctx, 6, 6, canvas.width - 12, canvas.height - 12, 18);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255,107,107,0.7)';
+  ctx.strokeStyle = `rgba(${r},${g},${b},0.7)`;
   ctx.lineWidth = 5;
   ctx.stroke();
-  ctx.fillStyle = '#ff8f8f';
-  ctx.font = '900 44px system-ui, sans-serif';
+  ctx.fillStyle = hex;
+  ctx.font = '900 46px system-ui, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('MAGAZIJN', 192, 58);
+  ctx.fillText(title, 192, 58);
   ctx.fillStyle = 'rgba(244,248,255,0.72)';
   ctx.font = '700 26px system-ui, sans-serif';
-  ctx.fillText('onverkochte voorraad', 192, 96);
+  ctx.fillText(sub, 192, 96);
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -865,24 +1084,34 @@ function rebuildDynamic(dynamic: THREE.Group, g: GameState, inventoryHitMeshes: 
     }
   }
 
-  // Onverkochte huizen stapelen op het magazijn-pallet (overproductie zichtbaar).
+  const marketX = STATION_LAYOUT[4].x;
+
+  // MAGAZIJN (links, rood): onverkochte huizen stapelen op = overproductie.
   const unsold = g.built.filter((h) => !h.sold);
-  addHouseCluster(dynamic, STATION_LAYOUT[4].x - 0.18, 0.42, unsold.slice(-9), 9, 3);
-  if (unsold.length > 0) addWarehouseCount(dynamic, STATION_LAYOUT[4].x - 0.18, unsold.length);
+  addHouseCluster(dynamic, marketX - 0.5, 0.52, unsold.slice(-12), 12, 3);
+  if (unsold.length > 0) addCountBadge(dynamic, marketX - 1.18, 1.06, 0.52, unsold.length, 0xff6b6b);
+
+  // WIJK (rechts, groen): verkochte huizen worden geleverd = waarde. Groeit als een buurt.
+  const sold = g.built.filter((h) => h.sold);
+  addHouseCluster(dynamic, marketX + 2.55, -0.12, sold.slice(-15), 15, 5);
+  if (sold.length > 0) addCountBadge(dynamic, marketX + 3.7, 1.06, -0.12, sold.length, 0xd8fe56);
+
   addMarketDemand(dynamic, g);
 }
 
-function addWarehouseCount(group: THREE.Group, x: number, count: number) {
+function addCountBadge(group: THREE.Group, x: number, y: number, z: number, count: number, accent: number) {
+  const col = new THREE.Color(accent);
+  const r = Math.round(col.r * 255), g = Math.round(col.g * 255), b = Math.round(col.b * 255);
   const canvas = document.createElement('canvas');
   canvas.width = 128;
   canvas.height = 128;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, 128, 128);
-  ctx.fillStyle = '#ff6b6b';
+  ctx.fillStyle = `rgb(${r},${g},${b})`;
   ctx.beginPath();
   ctx.arc(64, 64, 56, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#1a0e0e';
+  ctx.fillStyle = accent === 0xd8fe56 ? '#1a2008' : '#1a0e0e';
   ctx.font = '900 72px system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -893,7 +1122,7 @@ function addWarehouseCount(group: THREE.Group, x: number, count: number) {
     new THREE.PlaneGeometry(0.34, 0.34),
     new THREE.MeshBasicMaterial({ map: tex, transparent: true })
   );
-  badge.position.set(x + 0.66, 1.04, 0.42);
+  badge.position.set(x, y, z);
   badge.rotation.x = -0.1;
   group.add(badge);
 }
@@ -1151,37 +1380,110 @@ function createSetPack(color: Color, scale = 1, count = 4) {
 function createPickupTruck(color: Color) {
   const group = createDeliveryTruck();
   const house = createHouseMesh(color, 0.42);
-  house.position.set(0.18, 0.32, 0);
+  house.position.set(0.24, 0.5, 0);
   group.add(house);
   return group;
 }
 
 function createDeliveryTruck() {
   const group = new THREE.Group();
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xd8fe56, roughness: 0.38, metalness: 0.18 });
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0x111417, roughness: 0.5, metalness: 0.2 });
-  const cabMat = new THREE.MeshStandardMaterial({ color: 0xf4f8ff, roughness: 0.34, metalness: 0.12 });
+  const limeMat = new THREE.MeshStandardMaterial({
+    color: 0xd8fe56,
+    roughness: 0.34,
+    metalness: 0.22,
+    emissive: 0x263600,
+    emissiveIntensity: 0.08,
+  });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x090d10, roughness: 0.5, metalness: 0.26 });
+  const graphiteMat = new THREE.MeshStandardMaterial({ color: 0x1b2228, roughness: 0.45, metalness: 0.28 });
+  const cabMat = new THREE.MeshStandardMaterial({ color: 0xf4f8ff, roughness: 0.34, metalness: 0.14 });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0x111b22,
+    roughness: 0.18,
+    metalness: 0.08,
+    emissive: 0x162432,
+    emissiveIntensity: 0.28,
+  });
+  const lightMat = new THREE.MeshStandardMaterial({
+    color: 0xffe18a,
+    roughness: 0.2,
+    emissive: 0xffc342,
+    emissiveIntensity: 1.3,
+  });
 
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.2, 0.36), bodyMat);
-  body.position.y = 0.18;
-  group.add(body);
-  addEdges(body, 0x101418);
+  const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.1, 0.52), graphiteMat);
+  chassis.position.set(0.08, 0.14, 0);
+  group.add(chassis);
+  addEdges(chassis, 0x050607);
 
-  const cab = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.24, 0.32), cabMat);
-  cab.position.set(-0.34, 0.28, 0);
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.09, 0.48), darkMat);
+  bed.position.set(0.27, 0.28, 0);
+  group.add(bed);
+  addEdges(bed, 0xd8fe56);
+
+  const bedStripe = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.025, 0.04), limeMat);
+  bedStripe.position.set(0.27, 0.36, 0.25);
+  group.add(bedStripe);
+
+  for (const z of [-0.28, 0.28]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.08, 0.035), limeMat);
+    rail.position.set(0.28, 0.42, z);
+    group.add(rail);
+  }
+  const tailgate = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.48), limeMat);
+  tailgate.position.set(0.72, 0.39, 0);
+  group.add(tailgate);
+
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.52), cabMat);
+  cab.position.set(-0.5, 0.38, 0);
   group.add(cab);
-  addEdges(cab, 0x101418);
+  addEdges(cab, 0x111417);
 
-  for (const x of [-0.28, 0.28]) {
-    for (const z of [-0.2, 0.2]) {
-      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.055, 14), darkMat);
-      wheel.position.set(x, 0.06, z);
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.5), limeMat);
+  hood.position.set(-0.18, 0.3, 0);
+  group.add(hood);
+  addEdges(hood, 0x111417);
+
+  const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.2, 0.36), glassMat);
+  windshield.position.set(-0.7, 0.44, 0);
+  group.add(windshield);
+  const sideWindowA = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.16, 0.025), glassMat);
+  sideWindowA.position.set(-0.5, 0.46, -0.27);
+  group.add(sideWindowA);
+  const sideWindowB = sideWindowA.clone();
+  sideWindowB.position.z = 0.27;
+  group.add(sideWindowB);
+
+  const bumper = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.11, 0.48), graphiteMat);
+  bumper.position.set(-0.76, 0.18, 0);
+  group.add(bumper);
+  for (const z of [-0.15, 0.15]) {
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.045, 0.08), lightMat);
+    lamp.position.set(-0.805, 0.24, z);
+    group.add(lamp);
+  }
+
+  for (const wx of [-0.48, 0.18, 0.58]) {
+    for (const z of [-0.31, 0.31]) {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.07, 20), darkMat);
+      wheel.position.set(wx, 0.08, z);
       wheel.rotation.x = Math.PI / 2;
       group.add(wheel);
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.075, 16), limeMat);
+      hub.position.copy(wheel.position);
+      hub.rotation.x = Math.PI / 2;
+      group.add(hub);
     }
   }
 
   group.rotation.y = -0.18;
+  group.scale.setScalar(0.92);
+  group.traverse((o) => {
+    if (o instanceof THREE.Mesh) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
   return group;
 }
 
