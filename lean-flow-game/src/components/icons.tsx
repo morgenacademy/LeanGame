@@ -6,9 +6,14 @@ import SortColorSvg from '../assets/game/icon-sort-color.svg?react';
 import SortSizeSvg from '../assets/game/icon-sort-size.svg?react';
 import SetSvg from '../assets/game/icon-set.svg?react';
 import BuilderSvg from '../assets/game/icon-builder.svg?react';
+import BuiltStatSvg from '../assets/game/icon-built.svg?react';
 import CoinSvg from '../assets/game/coin.svg?react';
+import CostStatSvg from '../assets/game/icon-cost.svg?react';
 import CustomerSvg from '../assets/game/customer.svg?react';
 import HouseStagesSvg from '../assets/game/house-stages.svg?react';
+import ProfitStatSvg from '../assets/game/icon-profit.svg?react';
+import SoldStatSvg from '../assets/game/icon-sold.svg?react';
+import WipStatSvg from '../assets/game/icon-wip.svg?react';
 
 export {
   BrickSvg,
@@ -17,7 +22,12 @@ export {
   SortSizeSvg,
   SetSvg,
   BuilderSvg,
+  BuiltStatSvg,
   CoinSvg,
+  CostStatSvg,
   CustomerSvg,
   HouseStagesSvg,
+  ProfitStatSvg,
+  SoldStatSvg,
+  WipStatSvg,
 };

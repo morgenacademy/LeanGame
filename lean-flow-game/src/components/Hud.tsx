@@ -1,6 +1,8 @@
+import type { ComponentType, SVGProps } from 'react';
 import { useGame } from '../game/store';
 import { euro } from '../game/colors';
 import { ROUNDS } from '../game/config';
+import { BuiltStatSvg, CostStatSvg, ProfitStatSvg, SoldStatSvg, WipStatSvg } from './icons';
 
 export function Hud() {
   const g = useGame((s) => s.g);
@@ -56,13 +58,13 @@ export function Hud() {
       </div>
 
       <div className="hud-stats">
-        <Stat label="Gebouwd" icon="🏗" value={m.housesBuilt} />
-        <Stat label="Verkocht" icon="🏠" value={hidden ? '?' : m.housesSold} />
-        <Stat label="WIP" icon="📦" value={wipNow} warn={wipNow >= 6} />
-        <Stat label="Kosten" icon="🧱" value={euro(-liveCost)} sub={costSum} bad={liveCost > 0} />
+        <Stat label="Gebouwd" icon={BuiltStatSvg} value={m.housesBuilt} />
+        <Stat label="Verkocht" icon={SoldStatSvg} value={hidden ? '?' : m.housesSold} />
+        <Stat label="WIP" icon={WipStatSvg} value={wipNow} warn={wipNow >= 6} />
+        <Stat label="Kosten" icon={CostStatSvg} value={euro(-liveCost)} sub={costSum} bad={liveCost > 0} />
         <Stat
           label="Winst"
-          icon="€"
+          icon={ProfitStatSvg}
           value={hidden ? '?' : euro(liveProfit)}
           sub={profitSum}
           good={!hidden && liveProfit >= 0}
@@ -85,7 +87,7 @@ function Stat({
   bad,
 }: {
   label: string;
-  icon: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   value: string | number;
   sub?: string;
   warn?: boolean;
@@ -93,11 +95,12 @@ function Stat({
   bad?: boolean;
 }) {
   const cls = ['stat', warn && 'warn', good && 'good', bad && 'bad'].filter(Boolean).join(' ');
+  const Icon = icon;
   return (
     <div className={cls}>
       <div className="stat-label">{label}</div>
       <div className="stat-main">
-        <span className="stat-icon" aria-hidden>{icon}</span>
+        <Icon className="stat-icon" aria-hidden focusable="false" />
         <span className="stat-value">{value}</span>
       </div>
       {sub && <div className="stat-sub">{sub}</div>}

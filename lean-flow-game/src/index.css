@@ -2176,9 +2176,12 @@ body::before {
 }
 
 .stat-icon {
+  display: block;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
   color: #f6f8f9;
-  font-size: 2rem;
-  line-height: 1;
+  filter: drop-shadow(0 0 9px rgba(216, 254, 86, 0.16));
 }
 
 .stat-value {
@@ -2935,7 +2938,9 @@ body::before {
   }
 
   .stat-icon {
-    font-size: 1.2rem;
+    flex-basis: 28px;
+    width: 28px;
+    height: 28px;
   }
 
   .stat-value {

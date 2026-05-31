@@ -29,6 +29,13 @@ interface TransferVisual {
   spin: boolean;
 }
 
+/** Een bewegende machine per werkplek. `update(t, active)` animeert elk frame;
+ *  active = het station verwerkt nu (anders staat de machine stil/idle). */
+interface MachineAnimator {
+  stationIndex: number;
+  update: (t: number, active: boolean) => void;
+}
+
 const STATION_LAYOUT = [
   { x: -6.6, z: 0.05, label: 'MATERIAAL', icon: 'SORT', step: '1', task: 'sorteer op kleur' },
   { x: -3.25, z: -0.05, label: 'MAAT', icon: 'SIZE', step: '2', task: 'sorteer op maat' },
@@ -180,7 +187,8 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 
-  buildStaticScene(root, beltTexture, beltMats, robot, dropHitMeshes);
+  const machineAnimators: MachineAnimator[] = [];
+  buildStaticScene(root, beltTexture, beltMats, robot, dropHitMeshes, machineAnimators);
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.68);
   scene.add(ambient);
@@ -227,6 +235,11 @@ function createFactoryRuntime(canvas: HTMLCanvasElement, shell: HTMLDivElement):
       if (mat.map) mat.map.offset.x = -t * 0.55;
     }
     updateTransfers(root, transfers, t);
+    for (const m of machineAnimators) {
+      const st = currentState?.stations[m.stationIndex];
+      const active = !!currentState?.running && !!st && !st.blocked;
+      m.update(t, active);
+    }
     robot.rotation.y = -0.18 + Math.sin(t * 1.6) * 0.16;
     renderer.render(scene, camera);
     raf = requestAnimationFrame(animate);
@@ -263,7 +276,8 @@ function buildStaticScene(
   beltTexture: THREE.CanvasTexture,
   beltMats: THREE.MeshBasicMaterial[],
   robot: THREE.Group,
-  dropHitMeshes: THREE.Mesh[]
+  dropHitMeshes: THREE.Mesh[],
+  machineAnimators: MachineAnimator[]
 ) {
   createFactoryBackdrop(root);
 
@@ -291,7 +305,8 @@ function buildStaticScene(
     createPlatform(root, s.x, s.z, 2.35, 2.05, false);
     createSign(root, s.x, 0.2, s.label, s.task, s.step);
     createFeeder(root, s.x, 0.95);
-    createStationTool(root, s.x, index);
+    const animator = createStationMachine(root, s.x, index);
+    if (animator) machineAnimators.push({ stationIndex: index, update: animator });
   });
 
   createPlatform(root, STATION_LAYOUT[3].x, STATION_LAYOUT[3].z, 2.85, 2.65, true);
@@ -692,48 +707,103 @@ function createFeeder(root: THREE.Group, x: number, z: number) {
   addEdges(tray, 0xf4f8ff);
 }
 
-function createStationTool(root: THREE.Group, x: number, index: number) {
+type MachineUpdate = (t: number, active: boolean) => void;
+
+/** Bouwt een bewegende machine per werkplek en geeft een update-functie terug. */
+function createStationMachine(root: THREE.Group, x: number, index: number): MachineUpdate | null {
   const group = new THREE.Group();
   group.position.set(x - 0.2, 0.57, -0.18);
   root.add(group);
 
+  const steel = new THREE.MeshStandardMaterial({ color: 0x8b94a0, roughness: 0.4, metalness: 0.6 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2a2f37, roughness: 0.5, metalness: 0.5 });
+  const accent = new THREE.MeshStandardMaterial({
+    color: 0xd8fe56,
+    roughness: 0.35,
+    metalness: 0.3,
+    emissive: 0x2c3a00,
+    emissiveIntensity: 0.5,
+  });
+
   if (index === 0) {
+    // SORTEREN OP KLEUR: vier kleurbakjes + een sorteerarm die heen-en-weer zwaait
+    // en een blokje 'in het juiste bakje' laat vallen.
     COLORS.forEach((color, i) => {
-      const lane = new THREE.Mesh(
-        new THREE.BoxGeometry(0.16, 0.035, 0.7),
-        new THREE.MeshBasicMaterial({ color: COLOR_HEX[color], transparent: true, opacity: 0.88 })
+      const bin = new THREE.Mesh(
+        new THREE.BoxGeometry(0.17, 0.12, 0.5),
+        new THREE.MeshStandardMaterial({ color: COLOR_HEX[color], roughness: 0.5, metalness: 0.2 })
       );
-      lane.position.set((i - 1.5) * 0.2, 0, 0);
-      group.add(lane);
+      bin.position.set((i - 1.5) * 0.21, 0.06, 0.06);
+      group.add(bin);
+      addEdges(bin, 0x101418);
     });
-    return;
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.5, 14), dark);
+    post.position.set(0, 0.3, -0.2);
+    group.add(post);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.06), steel);
+    arm.position.set(0, 0.52, -0.2);
+    group.add(arm);
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.1), accent);
+    grip.position.set(0.22, 0.46, -0.2);
+    arm.add(grip);
+    grip.position.set(0.22, -0.06, 0);
+    return (t, active) => {
+      const sweep = active ? Math.sin(t * 3.4) : Math.sin(t * 0.5) * 0.15;
+      arm.rotation.y = sweep * 0.9;
+      grip.position.y = -0.06 - (active ? Math.abs(Math.sin(t * 6.8)) * 0.12 : 0);
+    };
   }
 
   if (index === 1) {
-    const railMat = new THREE.MeshBasicMaterial({ color: 0xf4f8ff, transparent: true, opacity: 0.86 });
-    const ruler = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.035, 0.08), railMat);
+    // SORTEREN OP MAAT: een schuifmaat met twee kaken die open/dicht knijpen + liniaal.
+    const ruler = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.04, 0.1), steel);
+    ruler.position.y = 0.02;
     group.add(ruler);
-    for (let i = 0; i < 6; i++) {
-      const tick = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.045, i % 2 === 0 ? 0.22 : 0.15), railMat);
-      tick.position.set(-0.42 + i * 0.17, 0.02, 0.1);
+    for (let i = 0; i < 7; i++) {
+      const tick = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.05, i % 2 === 0 ? 0.2 : 0.12), dark);
+      tick.position.set(-0.42 + i * 0.14, 0.05, 0.12);
       group.add(tick);
     }
-    const jawA = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.38), railMat);
-    jawA.position.set(-0.24, 0.04, 0.12);
-    const jawB = jawA.clone();
-    jawB.position.x = 0.3;
+    const jawA = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.4), accent);
+    jawA.position.set(-0.22, 0.14, 0.1);
+    const jawB = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.4), accent);
+    jawB.position.set(0.22, 0.14, 0.1);
     group.add(jawA, jawB);
-    return;
+    const piece = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), dark);
+    piece.position.set(0, 0.13, 0.1);
+    group.add(piece);
+    return (t, active) => {
+      const open = active ? 0.16 + Math.abs(Math.sin(t * 4.2)) * 0.16 : 0.26;
+      jawA.position.x = -open;
+      jawB.position.x = open;
+    };
   }
 
-  const slotMat = new THREE.MeshBasicMaterial({ color: 0xd8fe56, transparent: true, opacity: 0.84 });
+  // SET SAMENSTELLEN: een stempel/pers die op-en-neer drukt op een 2x2 bundel.
+  const bedMat = accent;
   for (let i = 0; i < 4; i++) {
     const row = Math.floor(i / 2);
     const col = i % 2;
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.035, 0.22), slotMat);
-    frame.position.set((col - 0.5) * 0.34, 0, (row - 0.5) * 0.3);
-    group.add(frame);
+    const slot = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.04, 0.2), bedMat);
+    slot.position.set((col - 0.5) * 0.32, 0.02, (row - 0.5) * 0.28 + 0.08);
+    group.add(slot);
   }
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.05, 0.06), dark);
+  frame.position.set(0, 0.56, 0.08);
+  group.add(frame);
+  for (const px of [-0.36, 0.36]) {
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.56, 0.06), dark);
+    pillar.position.set(px, 0.28, 0.08);
+    group.add(pillar);
+  }
+  const press = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.5), steel);
+  press.position.set(0, 0.42, 0.08);
+  group.add(press);
+  addEdges(press, 0x101418);
+  return (t, active) => {
+    const down = active ? (Math.sin(t * 5.0) * 0.5 + 0.5) * 0.26 : 0;
+    press.position.y = 0.42 - down;
+  };
 }
 
 function createPlayerDeck(root: THREE.Group, robot: THREE.Group, x: number) {
