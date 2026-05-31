@@ -139,8 +139,12 @@ export function tick(s: GameState, dt: number): void {
       st.justActed = true;
       st.produced++;
     } else {
+      // Geblokkeerd (geen input of stroomafwaarts vol): reset de volle cyclustijd.
+      // Zo kost verwerken altijd een hele cyclus zodra er weer input is, in plaats
+      // van instant mee te vuren op de tick dat het vorige station levert.
+      // Dat voorkomt dat stations 'tegelijk' produceren.
       st.blocked = true;
-      st.cooldownMs = 0; // klaar, maar geblokkeerd: probeer volgende tick opnieuw
+      st.cooldownMs = cfg.stationCooldownMs[i];
     }
   }
 

@@ -30,11 +30,11 @@ interface TransferVisual {
 }
 
 const STATION_LAYOUT = [
-  { x: -6.6, z: 0.05, label: 'MATERIAAL', icon: 'SORT' },
-  { x: -3.25, z: -0.05, label: 'MAAT', icon: 'SIZE' },
-  { x: 0.05, z: 0.06, label: 'SET', icon: 'SET' },
-  { x: 3.45, z: -0.08, label: 'BOUW', icon: 'PLAYER' },
-  { x: 6.75, z: 0.05, label: 'MARKT', icon: 'CART' },
+  { x: -6.6, z: 0.05, label: 'MATERIAAL', icon: 'SORT', step: '1', task: 'sorteer op kleur' },
+  { x: -3.25, z: -0.05, label: 'MAAT', icon: 'SIZE', step: '2', task: 'sorteer op maat' },
+  { x: 0.05, z: 0.06, label: 'SET', icon: 'SET', step: '3', task: 'bundel 4 tot set' },
+  { x: 3.45, z: -0.08, label: 'BOUW', icon: 'PLAYER', step: '4', task: 'bouw het huis' },
+  { x: 6.75, z: 0.05, label: 'MARKT', icon: 'CART', step: '', task: 'de klant koopt' },
 ] as const;
 
 const PLAYER_STOCK = {
@@ -289,18 +289,18 @@ function buildStaticScene(
 
   STATION_LAYOUT.slice(0, 3).forEach((s, index) => {
     createPlatform(root, s.x, s.z, 2.35, 2.05, false);
-    createSign(root, s.x, 0.2, s.label, s.icon);
+    createSign(root, s.x, 0.2, s.label, s.task, s.step);
     createFeeder(root, s.x, 0.95);
     createStationTool(root, s.x, index);
   });
 
   createPlatform(root, STATION_LAYOUT[3].x, STATION_LAYOUT[3].z, 2.85, 2.65, true);
-  createSign(root, STATION_LAYOUT[3].x, 0.12, 'BOUW', 'PLAYER');
+  createSign(root, STATION_LAYOUT[3].x, 0.12, 'BOUW', STATION_LAYOUT[3].task, STATION_LAYOUT[3].step);
   createPlayerDeck(root, robot, STATION_LAYOUT[3].x);
   createBuildWorkbench(root, STATION_LAYOUT[3].x, dropHitMeshes);
 
   createPlatform(root, STATION_LAYOUT[4].x, STATION_LAYOUT[4].z, 2.45, 2.05, false);
-  createSign(root, STATION_LAYOUT[4].x, 0.2, 'MARKT', 'CART');
+  createSign(root, STATION_LAYOUT[4].x, 0.2, 'MARKT', STATION_LAYOUT[4].task, STATION_LAYOUT[4].step);
   createMarketStall(root, STATION_LAYOUT[4].x);
 }
 
@@ -989,11 +989,11 @@ function makeZoneTexture(title: string, sub: string, accent: number) {
   return tex;
 }
 
-function createSign(root: THREE.Group, x: number, z: number, label: string, icon: string) {
-  const tex = makeSignTexture(label, icon);
+function createSign(root: THREE.Group, x: number, z: number, label: string, task: string, step: string) {
+  const tex = makeSignTexture(label, task, step);
   const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.28, 0.72), mat);
-  sign.position.set(x, 1.45, z - 0.94);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.44, 0.81), mat);
+  sign.position.set(x, 1.5, z - 0.94);
   sign.rotation.x = -0.06;
   root.add(sign);
 }
@@ -1542,24 +1542,45 @@ function createHouseMesh(color: Color, scale = 1) {
   return group;
 }
 
-function makeSignTexture(label: string, icon: string) {
+function makeSignTexture(label: string, task: string, step: string) {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
+  canvas.width = 576;
   canvas.height = 288;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = 'rgba(0,0,0,0.86)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  roundedRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 26);
+  ctx.fill();
   ctx.strokeStyle = 'rgba(245,248,255,0.82)';
-  ctx.lineWidth = 8;
-  ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
-  ctx.fillStyle = icon === 'PLAYER' ? '#d8fe56' : '#f6f8fb';
-  ctx.font = '700 64px system-ui, sans-serif';
+  ctx.lineWidth = 7;
+  ctx.stroke();
+
+  // Stap-badge linksboven (toont de volgorde 1->2->3->4 in de lijn).
+  if (step) {
+    ctx.fillStyle = '#d8fe56';
+    ctx.beginPath();
+    ctx.arc(64, 70, 38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#10160a';
+    ctx.font = '900 46px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(step, 64, 72);
+  }
+
+  // Titel van het station.
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#f6f8fb';
+  ctx.font = '900 56px system-ui, sans-serif';
+  ctx.textAlign = step ? 'left' : 'center';
+  ctx.fillText(label, step ? 122 : 288, 92);
+
+  // Wat hier gebeurt, in gewone taal.
+  ctx.fillStyle = 'rgba(216,254,86,0.92)';
+  ctx.font = '600 38px system-ui, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(icon, 256, 118);
-  ctx.fillStyle = '#d8fe56';
-  ctx.font = '900 38px system-ui, sans-serif';
-  ctx.fillText(label, 256, 206);
+  ctx.fillText(task, 288, 196);
+
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
